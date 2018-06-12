@@ -130,21 +130,21 @@ def _build_page(page, config, site_navigation, env, dirty=False):
 
     # Run the `pre_page` plugin event
     page = config['plugins'].run_event(
-        'pre_page', page, config=config, site_navigation=site_navigation
+        'pre_page', page, config=config, site_navigation=site_navigation, dirty=dirty
     )
 
     page.read_source(config=config)
 
     # Run `page_markdown` plugin events.
     page.markdown = config['plugins'].run_event(
-        'page_markdown', page.markdown, page=page, config=config, site_navigation=site_navigation
+        'page_markdown', page.markdown, page=page, config=config, site_navigation=site_navigation, dirty=dirty
     )
 
     page.render(config, site_navigation)
 
     # Run `page_content` plugin events.
     page.content = config['plugins'].run_event(
-        'page_content', page.content, page=page, config=config, site_navigation=site_navigation
+        'page_content', page.content, page=page, config=config, site_navigation=site_navigation, dirty=dirty
     )
 
     context = get_context(site_navigation, config, page)
@@ -157,7 +157,7 @@ def _build_page(page, config, site_navigation, env, dirty=False):
 
     # Run `page_context` plugin events.
     context = config['plugins'].run_event(
-        'page_context', context, page=page, config=config, site_navigation=site_navigation
+        'page_context', context, page=page, config=config, site_navigation=site_navigation, dirty=dirty
     )
 
     # Render the template.
@@ -165,7 +165,7 @@ def _build_page(page, config, site_navigation, env, dirty=False):
 
     # Run `post_page` plugin events.
     output_content = config['plugins'].run_event(
-        'post_page', output_content, page=page, config=config
+        'post_page', output_content, page=page, config=config, dirty=dirty
     )
 
     # Write the output file.
@@ -219,13 +219,13 @@ def build_pages(config, dirty=False):
     site_navigation = nav.SiteNavigation(config)
 
     # Run `nav` plugin events.
-    site_navigation = config['plugins'].run_event('nav', site_navigation, config=config)
+    site_navigation = config['plugins'].run_event('nav', site_navigation, config=config, dirty=dirty)
 
     env = config['theme'].get_env()
 
     # Run `env` plugin events.
     env = config['plugins'].run_event(
-        'env', env, config=config, site_navigation=site_navigation
+        'env', env, config=config, site_navigation=site_navigation, dirty=dirty
     )
 
     for template in config['theme'].static_templates:
@@ -245,7 +245,7 @@ def build_pages(config, dirty=False):
                 continue
 
             log.debug("Building page %s", page.input_path)
-            _build_page(page, config, site_navigation, env)
+            _build_page(page, config, site_navigation, env, dirty)
         except Exception:
             log.error("Error building page %s", page.input_path)
             raise
@@ -255,10 +255,10 @@ def build(config, live_server=False, dirty=False):
     """ Perform a full site build. """
 
     # Run `config` plugin events.
-    config = config['plugins'].run_event('config', config)
+    config = config['plugins'].run_event('config', config, dirty=dirty)
 
     # Run `pre_build` plugin events.
-    config['plugins'].run_event('pre_build', config)
+    config['plugins'].run_event('pre_build', config, dirty=dirty)
 
     if not dirty:
         log.info("Cleaning site directory")
@@ -288,7 +288,7 @@ def build(config, live_server=False, dirty=False):
     build_pages(config, dirty=dirty)
 
     # Run `post_build` plugin events.
-    config['plugins'].run_event('post_build', config)
+    config['plugins'].run_event('post_build', config, dirty=dirty)
 
 
 def site_directory_contains_stale_files(site_directory):

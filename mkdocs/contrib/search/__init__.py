@@ -56,14 +56,24 @@ class SearchPlugin(BasePlugin):
 
     def on_pre_build(self, config, **kwargs):
         "Create search index instance for later use."
+        if 'dirty' in kwargs and kwargs['dirty']:
+            return
+
         self.search_index = SearchIndex(**self.config)
 
     def on_page_context(self, context, **kwargs):
         "Add page to search index."
+        if 'dirty' in kwargs and kwargs['dirty']:
+            return
+
         self.search_index.add_entry_from_context(context['page'])
 
     def on_post_build(self, config, **kwargs):
         "Build search index."
+        if 'dirty' in kwargs and kwargs['dirty']:
+            log.debug("Dirty build, skip rebuilding search index")
+            return
+
         output_base_path = os.path.join(config['site_dir'], 'search')
         search_index = self.search_index.generate_search_index()
         json_output_path = os.path.join(output_base_path, 'search_index.json')
