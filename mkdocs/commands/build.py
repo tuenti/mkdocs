@@ -154,11 +154,6 @@ def _populate_page(page, config, files, dirty=False):
     """ Read page content from docs_dir and render Markdown. """
 
     try:
-        # When --dirty is used, only read the page if the file has been modified since the
-        # previous build of the output.
-        if dirty and not page.file.is_modified():
-            return
-
         # Run the `pre_page` plugin event
         page = config['plugins'].run_event(
             'pre_page', page, config=config, files=files, dirty=dirty
@@ -170,6 +165,11 @@ def _populate_page(page, config, files, dirty=False):
         page.markdown = config['plugins'].run_event(
             'page_markdown', page.markdown, page=page, config=config, files=files, dirty=dirty
         )
+
+        # When --dirty is used, read the file to extract metadata but only render the page if
+        # the file has been modified since the previous build of the output.
+        if dirty and not page.file.is_modified():
+            return
 
         page.render(config, files)
 
