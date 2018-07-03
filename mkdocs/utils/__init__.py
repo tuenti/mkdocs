@@ -276,6 +276,20 @@ def is_template_file(path):
     ]
 
 
+def is_image_file(path):
+    """
+    Return True if the given file path is an image file.
+    """
+    ext = os.path.splitext(path)[1].lower()
+    return ext in [
+        '.jpeg',
+        '.jpg',
+        '.png',
+        '.gif',
+        '.svg',
+    ]
+
+
 _ERROR_TEMPLATE_RE = re.compile(r'^\d{3}\.html?$')
 
 

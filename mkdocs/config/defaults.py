@@ -119,4 +119,7 @@ DEFAULT_SCHEMA = (
     # A key value pair should be the string name (as the key) and a dict of config
     # options (as the value).
     ('plugins', config_options.Plugins(default=['search'])),
+
+    # Configure internal SourceCodeLinksExtension
+    ('source_code_link', config_options.SourceCodeLink())
 )

@@ -680,3 +680,59 @@ class Plugins(OptionallyRequired):
         if errors_message:
             raise ValidationError(errors_message)
         return plugin
+
+
+class SourceCodeLink(OptionallyRequired):
+    """
+    SourceCodeLink Config Option
+
+    Configure SourceCodeLinkExtension
+    """
+
+    def __init__(self):
+        super(SourceCodeLink, self).__init__(default={})
+
+    def run_validation(self, value):
+
+        if not isinstance(value, dict):
+            raise ValidationError(
+                "Expected a dict, got {0}".format(type(value)))
+
+        if len(value) == 0:
+            return
+
+        config_types = set(type(l) for l in value)
+        if not config_types.issubset({utils.text_type, str}):
+            raise ValidationError("Invalid config. {0} {1}".format(
+                config_types, {utils.text_type, str}
+            ))
+
+        if 'repos_prefix' not in value:
+            value['repos_prefix'] = ""
+
+        if 'prefix' not in value:
+            value['prefix'] = ""
+
+        if 'suffix' not in value:
+            value['suffix'] = ""
+
+        if 'repos_file' not in value:
+            raise ValidationError("Undefined repos_file")
+
+        if not os.path.exists(value['repos_file']):
+            raise ValidationError("repos_file do not exist")
+
+        return value
+
+    def post_validation(self, config, key_name):
+        if not config[key_name]:
+            return
+
+        try:
+            config[key_name]['repos_info'] = []
+            with open(config[key_name]['repos_file']) as f:
+                for l in f.readlines():
+                    config[key_name]['repos_info'].append(tuple(l.strip().split()))
+
+        except IOError as e:
+            raise ValidationError('Unable to read repos_file', e)
