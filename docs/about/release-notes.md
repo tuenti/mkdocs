@@ -21,9 +21,9 @@ The current and past members of the MkDocs team.
 * [@d0ugal](https://github.com/d0ugal/)
 * [@waylan](https://github.com/waylan/)
 
-## Development Version
+## Version 1.0 (2018-??-??)
 
-### Major Additions to Development Version
+### Major Additions to Version 1.0
 
 #### Internal Refactor of Pages, Files, and Navigation
 
@@ -46,6 +46,8 @@ The changes included in the refactor are summarized below.
   This ensures all internal links are always computed correctly regardless of
   the configuration. This also allows all internal links to be validated, not
   just links to other Markdown pages. (#842 & #872).
+* A new [url] template filter smartly ensures all URLs are relative to the
+  current page (#1526).
 * An [on_files] plugin event has been added, which could be used to include
   files not in the `docs_dir`, exclude files, redefine page URLs (i.e.
   implement extensionless URLs), or to manipulate files in various other ways.
@@ -113,42 +115,51 @@ If both `pages` and `nav` are defined, the `pages` setting will be ignored.
 
 In previous versions of MkDocs some URLs expected the [base_url] template
 variable to be prepended to the URL and others did not. That inconsistency has
-been removed. All  URLs must now be joined with the `base_url`. As previously, a
-slash must be included between the `base_url` and the URL variable. For example,
-a theme template might have previously included a link to the `site_name` as:
+been removed in that no URLs are modified before being added to the template
+context.
+
+For example, a theme template might have previously included a link to
+the `site_name` as:
 
 ```django
 <a href="{{ nav.homepage.url }}">{{ config.site_name }}</a>
 ```
 
 And MkDocs would magically return a URL for the homepage which was relative to
-the current page. That "magic" has been removed and the `base_url` must now be
-explicitly included:
+the current page. That "magic" has been removed and the [url] template filter
+should be used:
 
 ```django
-<a href="{{ base_url }}/{{ nav.homepage.url }}">{{ config.site_name }}</a>
+<a href="{{ nav.homepage.url|url }}">{{ config.site_name }}</a>
 ```
 
 This change applies to any navigation items and pages, as well as the
 `page.next_page` and `page.previous_page` attributes. For the time being, the
 `extra_javascript` and `extra_css` variables continue to work as previously
-(without `base_url`), but they have been deprecated and the corresponding
-configuration values (`config.extra_javascript` and `config.extra_css`
-respectively) should be used with `base_url` instead.
-
-Note that navigation can now include links to external sites. Obviously, the
-`base_url` should not be prepended to these items. Therefore, all navigation
-items contain a `is_link` attribute which can be used to alter the behavior for
-external links.
+(without the `url` template filter), but they have been deprecated and the
+corresponding configuration values (`config.extra_javascript` and
+`config.extra_css` respectively) should be used with the filter instead.
 
 ```django
-<a href="{% if not nav_item.is_link %}{{ base_url }}/{% endif %}{{ nav_item.url }}">{{ nav_item.title }}</a>
+{% for path in config['extra_css'] %}
+    <link href="{{ path|url }}" rel="stylesheet">
+{% endfor %}
 ```
 
-Any other URL variables which should not be used with `base_url` are explicitly
-documented as such.
+Note that navigation can now include links to external sites. Obviously, the
+`base_url` should not be prepended to these items. However, the `url` template
+filter is smart enough to recognize the URL is absolute and does not alter it.
+Therefore, all navigation items can be passed to the filter and only those that
+need to will be altered.
+
+```django
+{% for nav_item in nav %}
+    <a href="{{ nav_item.url|url }}">{{ nav_item.title }}</a>
+{% endfor %}
+```
 
 [base_url]: ../user-guide/custom-themes.md#base_url
+[url]: ../user-guide/custom-themes.md#url
 
 #### Path Based Settings are Relative to Configuration File (#543)
 
@@ -168,6 +179,35 @@ mkdocs build --config-file /path/to/my/config/file.yml
 
 As previously, if no file is specified, MkDocs looks for a file named
 `mkdocs.yml` in the current working directory.
+
+#### Added support for YAML Meta-Data (#1542)
+
+Previously, MkDocs only supported MultiMarkdown style meta-data, which does not
+recognize different data types and is rather limited. MkDocs now also supports
+YAML style meta-data in Markdown documents. MkDocs relies on the the presence or
+absence of the deliminators (`---` or `...`) to determine whether YAML style
+meta-data or MultiMarkdown style meta-data is being used.
+
+Previously MkDocs would recognize MultiMarkdown style meta-data between the
+deliminators. Now, if the deliminators are detected, but the content between the
+deliminators is not valid YAML meta-data, MkDocs does not attempt to parse the
+content as MultiMarkdown style meta-data. Therefore, MultiMarkdowns style
+meta-data must not include the deliminators. See the [MultiMarkdown style
+meta-data documentation] for details.
+
+Prior to version 0.17, MkDocs returned all meta-data values as a list of strings
+(even a single line would return a list of one string). In version 0.17, that
+behavior was changed to return each value as a single string (multiple lines
+were joined), which some users found limiting (see #1471). That behavior
+continues for MultiMarkdown style meta-data in the current version. However,
+YAML style meta-data supports the full range of "safe" YAML data types.
+Therefore, it is recommended that any complex meta-data make use of the YAML
+style (see the [YAML style meta-data documentation] for details). In fact, a
+future version of MkDocs may deprecate support for MultiMarkdown style
+meta-data.
+
+[MultiMarkdown style meta-data documentation]: ../user-guide/writing-your-docs.md#multimarkdown-style-meta-data
+[YAML style meta-data documentation]: ../user-guide/writing-your-docs.md#yaml-style-meta-data
 
 #### Refactor Search Plugin
 
@@ -189,8 +229,23 @@ authors should review how [search and themes] interact.
 [search config]: ../user-guide/configuration.md#search
 [search and themes]: ../user-guide/custom-themes.md#search_and_themes
 
-### Other Changes and Additions to Development Version
+#### `theme_dir` Configuration Option fully Deprecated
 
+As of version 0.17, the [custom_dir] option replaced the deprecated `theme_dir`
+option. If users had set the `theme_dir` option, MkDocs version 0.17 copied the
+value to the `theme.custom_dir` option and a warning was issued. As of version
+1.0, the value is no longer copied and an error is raised.
+
+### Other Changes and Additions to Version 1.0
+
+* Keyboard shortcuts changed to not conflict with commonly used accessibility
+  shortcuts (#1502.)
+* User friendly YAML parse errors (#1543).
+* Officially support Python 3.7.
+* A missing theme configuration file now raises an error.
+* Empty `extra_css` and `extra_javascript` settings no longer raise a warning.
+* Add highlight.js configuration settings to built-in themes (#1284).
+* Close search modal when result is selected (#1527).
 * Add a level attribute to AnchorLinks (#1272).
 * Add MkDocs version check to gh-deploy script (#640).
 * Improve Markdown extension error messages. (#782).
@@ -213,6 +268,10 @@ authors should review how [search and themes] interact.
 * Remove PyPI Deployment Docs (#1360).
 * Update links to Python-Markdown library (#1360).
 * Document how to generate manpages for MkDocs commands (#686).
+
+## Version 0.17.5 (2018-07-06)
+
+* Bugfix: Fix Python 3.7 and PEP 479 incompatibility (#1518).
 
 ## Version 0.17.4
 
@@ -261,7 +320,7 @@ Support had been added to provide theme specific customizations. Theme authors
 can define default options as documented in [Theme Configuration]. A theme can
 now inherit from another theme, define various static templates to be rendered,
 and define arbitrary default variables to control behavior in the templates.
-The theme configuration is defined in a configuruation file named
+The theme configuration is defined in a configuration file named
 `mkdocs_theme.yml` which should be placed at the root of your template files. A
 warning will be raised if no configuration file is found and an error will be
 raised in a future release.
@@ -358,7 +417,7 @@ and user created and third-party templates should be updated as outlined below:
 In previous versions of MkDocs, if the `extra_css` or `extra_javascript` config
 settings were empty, MkDocs would scan the `docs_dir` and auto-populate each
 setting with all of the CSS and JavaScript files found. On version 0.16 this
-behavior was deprecated and a warning was issued. In 1.0 any unlisted CSS and
+behavior was deprecated and a warning was issued. In 0.17 any unlisted CSS and
 JavaScript files will not be included in the HTML templates, however, a warning
 will be issued. In other words, they will still be copied to the `site-dir`, but
 they will not have any effect on the theme if they are not explicitly listed.

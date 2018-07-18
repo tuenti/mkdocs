@@ -25,19 +25,79 @@ the [Customizing a Theme][customize] section below.
 ### mkdocs
 
 The default theme, which was built as a custom [Bootstrap] theme, supports most
-every feature of MkDocs. It only supports the default [theme configuration
-options] and only officially supports two levels in the navigation (see #1107).
+every feature of MkDocs. It only officially supports two levels in the
+navigation (see #1107).
 
-![mkdocs](/img/mkdocs.png)
+![mkdocs](../img/mkdocs.png)
+
+In addition to the default [theme configuration options], the `mkdocs` theme
+supports the following options:
+
+* __`highlightjs`__: Enables highlighting of source code in code blocks using
+  the [highlight.js] JavaScript library. Default: `True`.
+
+* __`hljs_style`__: The highlight.js library provides 79 different [styles]
+  (color variations) for highlighting source code in code blocks. Set this to
+  the name of the desired style. Default: `github`.
+
+* __`hljs_languages`__: By default, highlight.js only supports 23 common
+  languages. List additional languages here to include support for them.
+
+        theme:
+            name: mkdocs
+            highlightjs: true
+            hljs_languages:
+                - yaml
+                - rust
+
+* __`shortcuts`__: Defines keyboard shortcut keys.
+
+        theme:
+            name: mkdocs
+            shortcuts:
+                help: 191    # ?
+                next: 78     # n
+                previous: 80 # p
+                search: 83   # s
+
+    All values much be numeric key codes. It is best to use keys which are
+    available on all keyboards. You may use <http://keycode.info/> to determine
+    the key code for a given key.
+
+    * __`help`__: Display a help modal which lists the keyboard shortcuts.
+      Default: `191` (&quest;)
+
+    * __`next`__: Navigate to the "next" page. Default: `78` (n)
+
+    * __`previous`__: Navigate to the "previous" page. Default: `80` (p)
+
+    * __`search`__: Display the search modal. Default: `83` (s)
+
+[styles]: https://highlightjs.org/static/demo/
 
 ### readthedocs
 
-A clone of the default theme used by the [Read the Docs] service. This theme
-only supports features in its parent theme and does not support any MkDocs
-[theme configuration options] in addition to the defaults. Like its parent
-theme, only two levels are supported in the navigation.
+A clone of the default theme used by the [Read the Docs] service, which offers
+the same restricted feature-set as its parent theme. Like its parent theme, only
+two levels of navigation are supported.
 
-![ReadTheDocs](http://docs.readthedocs.io/en/latest/_images/screen_mobile.png)
+![ReadTheDocs](../img/readthedocs.png)
+
+In addition to the default [theme configuration options], the `readthedocs`
+theme supports the following options:
+
+* __`highlightjs`__: Enables highlighting of source code in code blocks using
+  the [highlight.js] JavaScript library. Default: `True`.
+
+* __`hljs_languages`__: By default, highlight.js only supports 23 common
+  languages. List additional languages here to include support for them.
+
+        theme:
+            name: readthedocs
+            highlightjs: true
+            hljs_languages:
+                - yaml
+                - rust
 
 ### Third Party Themes
 
@@ -279,3 +339,4 @@ any additional CSS files included in the `custom_dir`.
 [third party themes]: #third-party-themes
 [super block]: http://jinja.pocoo.org/docs/dev/templates/#super-blocks
 [base_url]: ./custom-themes.md#base_url
+[highlight.js]: https://highlightjs.org/

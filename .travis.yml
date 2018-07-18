@@ -7,7 +7,7 @@ matrix:
     # Default Python
     - env: TOXENV=flake8
     - env: TOXENV=markdown-lint
-      before_install: gem install mdl
+      before_install: npm install -g markdownlint-cli
     - env: TOXENV=linkchecker
     - env: TOXENV=jshint
       before_install: npm install -g jshint
@@ -38,6 +38,18 @@ matrix:
       env: TOXENV=py36-min-req
     - python: '3.6'
       env: TOXENV=py36-unittests
+    - python: '3.7'
+      env: TOXENV=py37-integration
+      dist: xenial
+      sudo: true
+    - python: '3.7'
+      env: TOXENV=py37-min-req
+      dist: xenial
+      sudo: true
+    - python: '3.7'
+      env: TOXENV=py37-unittests
+      dist: xenial
+      sudo: true
     - python: 'pypy'
       env: TOXENV=pypy-integration
     - python: 'pypy'
