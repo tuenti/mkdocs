@@ -81,9 +81,9 @@ source code, the repository host can display the index page of that directory as
 it is a README file. However, when MkDocs renders your site, the file will be
 renamed to `index.html` so that the server will serve it as a proper index file.
 
-You should not include both an `index.md` file and a `README.md` file in the
-same directory. It is suggested that you chose a convention for your project and
-then stick to it.
+If both an `index.md` file and a `README.md` file are found in the same
+directory, then the `index.md` file is used and the `README.md` file is
+ignored.
 
 ### Configure Pages and Navigation
 
@@ -379,7 +379,7 @@ authors:
     - Waylan Limberg
     - Tom Christie
 date: 2018-07-10
-some_url: http://example.com
+some_url: https://example.com
 ---
 This is the first paragraph of the document.
 ```
@@ -407,7 +407,7 @@ Authors: Waylan Limberg
          Tom Christie
 Date:    January 23, 2018
 blank-value:
-some_url: http://example.com
+some_url: https://example.com
 
 This is the first paragraph of the document.
 ```
