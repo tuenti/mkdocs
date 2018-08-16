@@ -48,11 +48,14 @@ def get_context(nav, files, config, page=None, base_url=''):
     # See https://reproducible-builds.org/specs/source-date-epoch/
     timestamp = int(os.environ.get('SOURCE_DATE_EPOCH', timegm(datetime.utcnow().utctimetuple())))
 
+    if base_url is not "/":
+        base_url.rstrip('/')
+
     return {
         'nav': nav,
         'pages': files.documentation_pages(),
 
-        'base_url': base_url.rstrip('/'),
+        'base_url': base_url,
 
         'extra_css': extra_css,
         'extra_javascript': extra_javascript,
@@ -79,7 +82,10 @@ def _build_template(name, template, files, config, nav):
         # Force absolute URLs in the nav of error pages and account for the
         # possability that the docs root might be different than the server root.
         # See https://github.com/mkdocs/mkdocs/issues/77
-        base_url = utils.urlparse(config['site_url']).path
+        if config['site_url']:
+            base_url = utils.urlparse(config['site_url']).path
+        else:
+            base_url = "/"
     else:
         base_url = utils.get_relative_url('.', name)
 
