@@ -17,18 +17,16 @@ log = logging.getLogger('mkdocs.elasticsearch')
 INDEX_MAPPING = {
     'index_patterns': [],
     'mappings': {
-        'document': {
-            'properties': {
-                'parent_document': {
-                    'type': 'join',
-                    'relations': {
-                        'full_doc': 'section'
-                    }
-                },
-                'text': {'type': 'text'},
-                'location': {'type': 'keyword'},
-                'title': {'type': 'text'},
-            }
+        'properties': {
+            'parent_document': {
+                'type': 'join',
+                'relations': {
+                    'full_doc': 'section'
+                }
+            },
+            'text': {'type': 'text'},
+            'location': {'type': 'keyword'},
+            'title': {'type': 'text'},
         }
     },
     'settings': {
@@ -100,7 +98,6 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
     def _base_es_document(self, doc):
         return {
             '_op_type': 'index',
-            '_type': 'document',
             '_index': self.build_index,
             '_id': hashlib.md5(doc['location']).hexdigest(),
             '_routing': 1, # Valid as there is only 1 shard
