@@ -64,6 +64,9 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
     )
 
     def on_pre_build(self, config, **kwargs):
+        if 'dirty' in kwargs and kwargs['dirty']:
+            return
+
         super(ElasticsearchPlugin, self).on_pre_build(config, **kwargs)
         self.es_client = elasticsearch.Elasticsearch(self.config['es_host'])
         log.info(
@@ -88,14 +91,24 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
             log.info("Elastic index alias %s doesn't exist, creating...", self.config['es_index'])
             self.es_client.indices.put_alias(self.build_index, self.config['es_index'])
 
-
     def on_post_build(self, config, **kwargs):
-        log.info('Indexing parent documents')
-        log.debug(list(self._get_es_parents()))
-        elasticsearch.helpers.bulk(self.es_client, self._get_es_parents())
-        log.info('Indexing children documents')
-        log.debug(list(self._get_es_children()))
-        elasticsearch.helpers.bulk(self.es_client, self._get_es_children())
+        if 'dirty' in kwargs and kwargs['dirty']:
+            log.debug("Dirty build, skip rebuilding search index")
+            return
+
+        try:
+            log.info('Indexing parent documents')
+            log.debug(list(self._get_es_parents()))
+            elasticsearch.helpers.bulk(self.es_client, self._get_es_parents())
+            log.info('Indexing children documents')
+            log.debug(list(self._get_es_children()))
+            elasticsearch.helpers.bulk(self.es_client, self._get_es_children())
+
+            body = {"actions": [{"remove": {"index": "{}-*".format(self.config['es_index']), "alias": self.config['es_index']}},
+                            {"add": {"index": self.build_index, "alias": self.config['es_index']}}]}
+            self.es_client.indices.update_aliases(body)
+        except Exception as e:
+            log.exception('Failed elastic build')
 
     def _base_es_document(self, doc):
         return {
