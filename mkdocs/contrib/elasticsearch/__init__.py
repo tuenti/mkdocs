@@ -24,9 +24,15 @@ INDEX_MAPPING = {
                     'full_doc': 'section'
                 }
             },
-            'text': {'type': 'text'},
+            'text': {
+                'type': 'text',
+                # 'analyzer': 'mkdocs_ngram_analizer'
+            },
             'location': {'type': 'keyword'},
-            'title': {'type': 'text'},
+            'title': {
+                'type': 'text',
+                # 'analyzer': 'mkdocs_ngram_analizer'
+            },
         }
     },
     'settings': {
@@ -34,21 +40,16 @@ INDEX_MAPPING = {
         'auto_expand_replicas': '0-3', # Reliability over performance
         # 'analysis': {
         #     'analyzer': {
-        #         'default': {
-        #             'type': 'custom',
-        #             'tokenizer': 'standard',
-        #             'filter': ['lowercase', 'mySnowball']
+        #         'mkdocs_ngram_analizer': {
+        #             'tokenizer': 'mkdocs_ngram',
         #         },
-        #         'default_search': {
-        #             'type': 'custom',
-        #             'tokenizer': 'standard',
-        #             'filter': ['standard', 'lowercase', 'mySnowball']
-        #         }
         #     },
-        #     'filter': {
-        #         'mySnowball': {
-        #             'type': 'snowball',
-        #             'language': 'English'
+        #     'tokenizer': {
+        #         'mkdocs_ngram': {
+        #             'type': 'ngram',
+        #             'min_ngram': 3,
+        #             'max_ngram': 10,
+        #             'token_chars': ['letter', 'digit']
         #         }
         #     }
         # }
@@ -106,7 +107,9 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
                             {"add": {"index": self.build_index, "alias": self.config['es_index']}}]}
             self.es_client.indices.update_aliases(body)
             mkdocs_indexes = self.es_client.indices.get("{}-*".format(self.config['es_index']))
-            self.es_client.indices.delete([index for index in mkdocs_indexes if index != self.build_index])
+            old_indices = [index for index in mkdocs_indexes if index != self.build_index]
+            if len(old_indices) > 0:
+                self.es_client.indices.delete(old_indices)
         except Exception as e:
             log.exception('Failed elastic build')
 
