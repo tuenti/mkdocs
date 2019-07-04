@@ -112,7 +112,7 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
         return {
             '_op_type': 'index',
             '_index': self.build_index,
-            '_id': hashlib.md5(doc['location']).hexdigest(),
+            '_id': hashlib.md5(doc['location'].encode('utf-8')).hexdigest(),
             '_routing': 1, # Valid as there is only 1 shard
             '_source': {
                 'location': doc['location'],
@@ -134,6 +134,6 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
             if '#' in doc['location']:
                 es_doc['_source']['parent_document'] = {
                     'name': 'section',
-                    'parent': hashlib.md5(doc['location'].split('#')[0]).hexdigest()
+                    'parent': hashlib.md5(doc['location'].split('#')[0].encode('utf-8')).hexdigest()
                 }
                 yield es_doc
