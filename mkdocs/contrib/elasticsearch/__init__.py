@@ -28,7 +28,10 @@ INDEX_MAPPING = {
                 'type': 'text',
                 # 'analyzer': 'mkdocs_ngram_analizer'
             },
-            'location': {'type': 'keyword'},
+            'location': {
+                'type': 'text',
+                'analyzer': 'mkdocs_location_analizer'
+            },
             'title': {
                 'type': 'text',
                 # 'analyzer': 'mkdocs_ngram_analizer'
@@ -38,21 +41,28 @@ INDEX_MAPPING = {
     'settings': {
         'number_of_shards': 1,
         'auto_expand_replicas': '0-3', # Reliability over performance
-        # 'analysis': {
-        #     'analyzer': {
-        #         'mkdocs_ngram_analizer': {
-        #             'tokenizer': 'mkdocs_ngram',
-        #         },
-        #     },
-        #     'tokenizer': {
-        #         'mkdocs_ngram': {
-        #             'type': 'ngram',
-        #             'min_ngram': 3,
-        #             'max_ngram': 10,
-        #             'token_chars': ['letter', 'digit']
-        #         }
-        #     }
-        # }
+        'analysis': {
+            'analyzer': {
+                'mkdocs_ngram_analizer': {
+                    'tokenizer': 'mkdocs_ngram',
+                },
+                'mkdocs_location_analizer': {
+                    'tokenizer': 'mkdocs_location',
+                }
+            },
+            'tokenizer': {
+                'mkdocs_ngram': {
+                    'type': 'ngram',
+                    'min_ngram': 3,
+                    'max_ngram': 10,
+                    'token_chars': ['letter', 'digit']
+                },
+                'mkdocs_location': {
+                    'type': 'pattern',
+                    'token_chars': '[/#]'
+                }
+            }
+        }
     }
 }
 
