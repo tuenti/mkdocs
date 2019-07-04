@@ -105,6 +105,8 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
             body = {"actions": [{"remove": {"index": "{}-*".format(self.config['es_index']), "alias": self.config['es_index']}},
                             {"add": {"index": self.build_index, "alias": self.config['es_index']}}]}
             self.es_client.indices.update_aliases(body)
+            mkdocs_indexes = self.es_client.indices.get("{}-*".format(self.config['es_index']))
+            self.es_client.indices.delete([index for index in mkdocs_indexes if index != self.build_index])
         except Exception as e:
             log.exception('Failed elastic build')
 
