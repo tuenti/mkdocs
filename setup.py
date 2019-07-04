@@ -58,6 +58,7 @@ setup(
     install_requires=[
         'click>=3.3',
         'Jinja2>=2.7.1',
+        'elasticsearch>=6',
         'livereload>=2.5.1',
         'Markdown>=2.3.1',
         'PyYAML>=3.10,<4',
@@ -74,6 +75,7 @@ setup(
         ],
         'mkdocs.plugins': [
             'search = mkdocs.contrib.search:SearchPlugin',
+            'elasticsearch = mkdocs.contrib.elasticsearch:ElasticsearchPlugin',
         ],
     },
     classifiers=[
