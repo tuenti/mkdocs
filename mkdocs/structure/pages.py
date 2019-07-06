@@ -14,9 +14,10 @@ from markdown.util import AMP_SUBSTITUTE
 
 from mkdocs.structure.toc import get_toc
 from mkdocs.utils import meta, urlparse, urlunparse, urljoin, get_markdown_title, is_markdown_file, is_image_file
-from mkdocs.exceptions import MarkdownNotFound
+from mkdocs.utils import meta, urlparse, urlunparse, urljoin, urlunquote, get_markdown_title, is_markdown_file, is_image_file, warning_filter
 
 log = logging.getLogger(__name__)
+log.addFilter(warning_filter)
 
 
 class Page(object):
@@ -123,7 +124,9 @@ class Page(object):
             self.edit_url = None
 
     def read_source(self, config):
-        source = config['plugins'].run_event('page_read_source', None, config=config, page=self)
+        source = config['plugins'].run_event(
+            'page_read_source', page=self, config=config
+        )
         if source is None:
             try:
                 with io.open(self.file.abs_src_path, 'r', encoding='utf-8-sig', errors='strict') as f:
@@ -177,7 +180,7 @@ class Page(object):
         if config['source_code_link']:
             extensions.append(SourceCodeLinkExtension(self.file, config['source_code_link']))
 
-        extensions.append(_RelativePathExtension(self.file, files, config['strict']))
+        extensions.append(_RelativePathExtension(self.file, files)
         extensions.extend(config['markdown_extensions'])
 
         md = markdown.Markdown(
@@ -189,10 +192,9 @@ class Page(object):
 
 
 class _RelativePathTreeprocessor(Treeprocessor):
-    def __init__(self, file, files, strict):
+    def __init__(self, file, files):
         self.file = file
         self.files = files
-        self.strict = strict
 
     def run(self, root):
         """
@@ -218,28 +220,23 @@ class _RelativePathTreeprocessor(Treeprocessor):
     def path_to_url(self, url):
         scheme, netloc, path, params, query, fragment = urlparse(url)
 
-        if scheme or netloc or not path or AMP_SUBSTITUTE in url or '.' not in os.path.split(path)[-1]:
+        if (scheme or netloc or not path or url.startswith('/')
+                or AMP_SUBSTITUTE in url or '.' not in os.path.split(path)[-1]):
             # Ignore URLs unless they are a relative link to a source file.
             # AMP_SUBSTITUTE is used internally by Markdown only for email.
             # No '.' in the last part of a path indicates path does not point to a file.
             return url
 
         # Determine the filepath of the target.
-        target_path = os.path.join(os.path.dirname(self.file.src_path), path)
+        target_path = os.path.join(os.path.dirname(self.file.src_path), urlunquote(path))
         target_path = os.path.normpath(target_path).lstrip(os.sep)
 
         # Validate that the target exists in files collection.
         if target_path not in self.files:
-            msg = (
-                "Documentation file '{}' contains a link to '{}' which does not exist "
-                "in the documentation directory.".format(self.file.src_path, target_path)
+            log.warning(
+                "Documentation file '{}' contains a link to '{}' which is not found "
+                "in the documentation files.".format(self.file.src_path, target_path)
             )
-            # In strict mode raise an error at this point.
-            if self.strict:
-                raise MarkdownNotFound(msg)
-            # Otherwise, when strict mode isn't enabled, log a warning
-            # to the user and leave the URL as it is.
-            log.warning(msg)
             return url
         target_file = self.files.get_file_from_path(target_path)
         path = target_file.url_relative_to(self.file)
@@ -253,13 +250,12 @@ class _RelativePathExtension(Extension):
     registers the Treeprocessor.
     """
 
-    def __init__(self, file, files, strict):
+    def __init__(self, file, files):
         self.file = file
         self.files = files
-        self.strict = strict
 
     def extendMarkdown(self, md, md_globals):
-        relpath = _RelativePathTreeprocessor(self.file, self.files, self.strict)
+        relpath = _RelativePathTreeprocessor(self.file, self.files)
         md.treeprocessors.add("relpath", relpath, "_end")
 
 

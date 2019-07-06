@@ -277,6 +277,15 @@ class TestFiles(PathAssertionMixin, unittest.TestCase):
         self.assertFalse(f.is_javascript())
         self.assertTrue(f.is_css())
 
+    def test_file_name_with_space(self):
+        f = File('foo bar.md', '/path/to/docs', '/path/to/site', use_directory_urls=False)
+        self.assertPathsEqual(f.src_path, 'foo bar.md')
+        self.assertPathsEqual(f.abs_src_path, '/path/to/docs/foo bar.md')
+        self.assertPathsEqual(f.dest_path, 'foo bar.html')
+        self.assertPathsEqual(f.abs_dest_path, '/path/to/site/foo bar.html')
+        self.assertEqual(f.url, 'foo%20bar.html')
+        self.assertEqual(f.name, 'foo bar')
+
     def test_files(self):
         fs = [
             File('index.md', '/path/to/docs', '/path/to/site', use_directory_urls=True),
@@ -305,6 +314,36 @@ class TestFiles(PathAssertionMixin, unittest.TestCase):
         self.assertEqual(len(files), 7)
         self.assertTrue(extra_file.src_path in files)
         self.assertEqual(files.documentation_pages(), [fs[0], fs[1], extra_file])
+
+    @tempdir(files=[
+        'favicon.ico',
+        'index.md'
+    ])
+    @tempdir(files=[
+        'base.html',
+        'favicon.ico',
+        'style.css',
+        'foo.md',
+        'README'
+    ])
+    def test_add_files_from_theme(self, tdir, ddir):
+        config = load_config(docs_dir=ddir, theme={'name': None, 'custom_dir': tdir})
+        env = config['theme'].get_env()
+        files = get_files(config)
+        self.assertEqual(
+            [file.src_path for file in files],
+            ['index.md', 'favicon.ico']
+        )
+        files.add_files_from_theme(env, config)
+        self.assertEqual(
+            [file.src_path for file in files],
+            ['index.md', 'favicon.ico', 'style.css']
+        )
+        # Ensure theme file does not override docs_dir file
+        self.assertEqual(
+            files.get_file_from_path('favicon.ico').abs_src_path,
+            os.path.normpath(os.path.join(ddir, 'favicon.ico'))
+        )
 
     def test_filter_paths(self):
         # Root level file

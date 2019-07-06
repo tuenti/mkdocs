@@ -51,7 +51,7 @@ use your package manager to install "Python" and "pip". Then you can use pip to
 
 [apt-get]: https://help.ubuntu.com/community/AptGet/Howto
 [homebrew]: https://brew.sh/
-[dnf]: http://dnf.readthedocs.io/en/latest/index.html
+[dnf]: https://dnf.readthedocs.io/en/latest/index.html
 [yum]: http://yum.baseurl.org/
 [chocolatey]: https://chocolatey.org/
 
@@ -63,12 +63,12 @@ these already installed from the command line:
 
 ```bash
 $ python --version
-Python 2.7.2
+Python 2.7.14
 $ pip --version
-pip 1.5.2
+pip 18.1 from /usr/local/lib/python2.7/site-packages/pip (python 2.7)
 ```
 
-MkDocs supports Python versions 2.7, 3.4, 3.5, 3.6, 3.7 and pypy.
+MkDocs supports Python versions 2.7.9+, 3.4, 3.5, 3.6, 3.7, and pypy.
 
 #### Installing Python
 
@@ -125,8 +125,8 @@ mkdocs, version 0.15.3
         pip install click-man
         click-man --target path/to/man/pages mkdocs
 
-    See the [click-man documentation] for an explaination of why manpages are
-    not automaticaly generated and installed by pip.
+    See the [click-man documentation] for an explanation of why manpages are
+    not automatically generated and installed by pip.
 
 [click-man]: https://github.com/click-contrib/click-man
 [click-man documentation]: https://github.com/click-contrib/click-man#automatic-man-page-installation-with-setuptools-and-pip
@@ -219,12 +219,12 @@ curl 'https://jaspervdj.be/lorem-markdownum/markdown.txt' > docs/about.md
 
 As our documentation site will include some navigation headers, you may want to
 edit the configuration file and add some information about the order, title, and
-nesting of each page in the navigation header by adding a [`pages`][pages]
+nesting of each page in the navigation header by adding a [`nav`][nav]
 setting:
 
 ```yaml
 site_name: MkLorum
-pages:
+nav:
     - Home: index.md
     - About: about.md
 ```
@@ -239,7 +239,7 @@ Try the menu items and navigate back and forth between pages. Then click on
 `Search`. A search dialog will appear, allowing you to search for any text on
 any page. Notice that the search results include every occurrence of the search
 term on the site and links directly to the section of the page in which the
-search term appears. You get of all that with no effort or configuration on your
+search term appears. You get all of that with no effort or configuration on your
 part!
 
 ![Screenshot](img/search.png)
@@ -251,7 +251,7 @@ changing the theme. Edit the `mkdocs.yml` file and add a [`theme`][theme] settin
 
 ```yaml
 site_name: MkLorum
-pages:
+nav:
     - Home: index.md
     - About: about.md
 theme: readthedocs
@@ -350,11 +350,11 @@ the MkDocs IRC channel `#mkdocs` on freenode.
 [build your own]: user-guide/custom-themes/
 [Amazon S3]: https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html
 [get-pip.py]: https://bootstrap.pypa.io/get-pip.py
-[pages]: user-guide/configuration/#pages
+[nav]: user-guide/configuration/#nav
 [discussion group]: https://groups.google.com/forum/#!forum/mkdocs
 [GitHub issues]: https://github.com/mkdocs/mkdocs/issues
 [GitHub project pages]: https://help.github.com/articles/creating-project-pages-manually/
-[pip]: http://pip.readthedocs.io/en/stable/installing/
+[pip]: https://pip.readthedocs.io/en/stable/installing/
 [Python]: https://www.python.org/
 [site_name]: user-guide/configuration/#site_name
 [theme]: user-guide/configuration/#theme

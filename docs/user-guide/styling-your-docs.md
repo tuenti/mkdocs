@@ -61,7 +61,7 @@ supports the following options:
                 search: 83   # s
 
     All values much be numeric key codes. It is best to use keys which are
-    available on all keyboards. You may use <http://keycode.info/> to determine
+    available on all keyboards. You may use <https://keycode.info/> to determine
     the key code for a given key.
 
     * __`help`__: Display a help modal which lists the keyboard shortcuts.
@@ -98,6 +98,27 @@ theme supports the following options:
             hljs_languages:
                 - yaml
                 - rust
+
+* __`include_homepage_in_sidebar`__: Lists the homepage in the sidebar menu. As
+  MkDocs requires that the homepage be listed in the `nav` configuration
+  option, this setting allows the homepage to be included or excluded from
+  the sidebar. Note that the site name/logo always links to the homepage.
+  Default: `True`.
+
+* __`prev_next_buttons_location`__: One of `bottom`, `top`, `both` , or `none`.
+  Displays the “Next” and “Previous” buttons accordingly. Default: `bottom`.
+
+* __`navigation_depth`__: The maximum depth of the navigation tree in the
+  sidebar. Default: `4`.
+
+* __`collapse_navigation`__: Only include the page section headers in the
+  sidebar for the current page. Default: `True`.
+
+* __`titles_only`__: Only include page titles in the sidebar, excluding all
+  section headers for all pages. Default: `False`.
+
+* __`sticky_navigation`__: If True, causes the sidebar to scroll with the main
+  page content as you scroll the page. Default: `True`.
 
 ### Third Party Themes
 
@@ -245,13 +266,13 @@ template would contain the following:
 ```django
 {% extends "base.html" %}
 
-{% block title %}
+{% block htmltitle %}
 <title>Custom title goes here</title>
 {% endblock %}
 ```
 
-In the above example, the title block defined in your custom `main.html` file
-will be used in place of the default title block defined in the parent theme.
+In the above example, the `htmltitle` block defined in your custom `main.html` file
+will be used in place of the default `htmltitle` block defined in the parent theme.
 You may re-define as many blocks as you desire, as long as those blocks are
 defined in the parent. For example, you could replace the Google Analytics
 script with one for a different service or replace the search feature with your

@@ -10,6 +10,7 @@ from mkdocs import utils
 
 
 log = logging.getLogger(__name__)
+log.addFilter(utils.warning_filter)
 
 
 class Files(object):
@@ -65,18 +66,21 @@ class Files(object):
     def add_files_from_theme(self, env, config):
         """ Retrieve static files from Jinja environment and add to collection. """
         def filter(name):
-            patterns = ['.*', '*.py', '*.pyc', '*.html', 'mkdocs_theme.yml']
+            patterns = ['.*', '*.py', '*.pyc', '*.html', '*readme*', 'mkdocs_theme.yml']
+            patterns.extend('*{0}'.format(x) for x in utils.markdown_extensions)
             patterns.extend(config['theme'].static_templates)
             for pattern in patterns:
-                if fnmatch.fnmatch(name, pattern):
+                if fnmatch.fnmatch(name.lower(), pattern):
                     return False
             return True
         for path in env.list_templates(filter_func=filter):
-            for dir in config['theme'].dirs:
-                # Find the first theme dir which contains path
-                if os.path.isfile(os.path.join(dir, path)):
-                    self.append(File(path, dir, config['site_dir'], config['use_directory_urls']))
-                    break
+            # Theme files do not override docs_dir files
+            if path not in self:
+                for dir in config['theme'].dirs:
+                    # Find the first theme dir which contains path
+                    if os.path.isfile(os.path.join(dir, path)):
+                        self.append(File(path, dir, config['site_dir'], config['use_directory_urls']))
+                        break
 
 
 class File(object):
@@ -162,7 +166,7 @@ class File(object):
                 url = '.'
             else:
                 url = dirname + '/'
-        return url
+        return utils.urlquote(url)
 
     def url_relative_to(self, other):
         """ Return url for file relative to other file. """
@@ -232,8 +236,9 @@ def get_files(config):
             # Skip any excluded files
             if _filter_paths(basename=filename, path=path, is_dir=False, exclude=exclude):
                 continue
-            # Skip README.md is an index file also exists in dir
+            # Skip README.md if an index file also exists in dir
             if filename.lower() == 'readme.md' and 'index.md' in filenames:
+                log.warning("Both index.md and readme.md found. Skipping readme.md from {}".format(source_dir))
                 continue
             files.append(File(path, config['docs_dir'], config['site_dir'], config['use_directory_urls']))
 

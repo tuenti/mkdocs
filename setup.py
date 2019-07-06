@@ -60,6 +60,7 @@ setup(
         'Jinja2>=2.7.1',
         'elasticsearch>=6',
         'livereload>=2.5.1',
+        'lunr[languages]>=0.5.2',
         'Markdown>=2.3.1',
         'PyYAML>=3.10,<4',
         'tornado>=5.0'

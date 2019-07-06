@@ -30,6 +30,7 @@ class DuplicateFilter(object):
 
 log = logging.getLogger(__name__)
 log.addFilter(DuplicateFilter())
+log.addFilter(utils.warning_filter)
 
 
 def get_context(nav, files, config, page=None, base_url=''):
@@ -234,12 +235,14 @@ def _build_page(page, config, files, nav, env, dirty=False):
 
 def build(config, live_server=False, dirty=False):
     """ Perform a full site build. """
+    from time import time
+    start = time()
 
     # Run `config` plugin events.
     config = config['plugins'].run_event('config', config, dirty=dirty)
 
     # Run `pre_build` plugin events.
-    config['plugins'].run_event('pre_build', config, dirty=dirty)
+    config['plugins'].run_event('pre_build', config=config, dirty=dirty)
 
     if not dirty:
         log.info("Cleaning site directory")
@@ -270,6 +273,7 @@ def build(config, live_server=False, dirty=False):
 
     log.debug("Reading markdown pages.")
     for file in files.documentation_pages():
+        log.debug("Reading: " + file.src_path)
         _populate_page(file.page, config, files, dirty)
 
     # Run `env` plugin events.
@@ -294,7 +298,12 @@ def build(config, live_server=False, dirty=False):
         _build_page(file.page, config, files, nav, env, dirty)
 
     # Run `post_build` plugin events.
-    config['plugins'].run_event('post_build', config, dirty=dirty)
+    config['plugins'].run_event('post_build', config=config, dirty=dirty)
+
+    if config['strict'] and utils.warning_filter.count:
+        raise SystemExit('\nExited with {} warnings in strict mode.'.format(utils.warning_filter.count))
+
+    log.info('Documentation built in %.2f seconds', time() - start)
 
 
 def site_directory_contains_stale_files(site_directory):

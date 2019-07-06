@@ -21,6 +21,57 @@ The current and past members of the MkDocs team.
 * [@d0ugal](https://github.com/d0ugal/)
 * [@waylan](https://github.com/waylan/)
 
+## Version 1.1 (*in development*)
+
+### Major Additions to Version 1.1
+
+#### Support for Lunr.py as `prebuild_index` engine
+
+Mkdocs now supports prebuilding indices using [Lunr.py][lunrpy-docs], a pure
+Python implementation of Lunr.js, allowing the user to avoid installing a
+NodeJS environment if so desired. For more information please read the
+[`prebuild_index` documentation][prebuildindex-docs].
+
+[lunrpy-docs]: http://lunr.readthedocs.io/
+[prebuildindex-docs]: ../../user-guide/configuration/#prebuild_index
+
+#### `readthedocs` theme updated with upstream (#588 and #1374)
+
+The `readthedocs` theme now more closely matches the [upstream] Sphinx theme
+(version 0.4.1). A number of new theme configuration settings were added which
+mirror the upstream configuration options. See the [theme
+documentation][rtd-docs] for details.
+
+[upstream]: https://github.com/rtfd/sphinx_rtd_theme/
+[rtd-docs]: ../user-guide/styling-your-docs.md#readthedocs
+
+## Update `mkdocs` theme to bootswatch 4.1.3 (#1563)
+
+The `mkdocs` theme now supports all the features of [Bootswatch 4.1]. Note that
+the [dropdowns] used in the navigation only support one level of nesting. If
+your global navigation uses more than one level, things will likely be broken.
+
+[Bootswatch 4.1]: https://getbootstrap.com/docs/4.1/getting-started/introduction/
+[dropdowns]: https://getbootstrap.com/docs/4.1/components/navs/#pills-with-dropdowns
+
+### Other Changes and Additions to Version 1.1
+
+* Bugfix: Exclude Markdown files and READMEs from theme. (#1766).
+* Bugfix: Account for encoded URLs (#1670).
+* Bugfix: Ensure theme files do not override `docs_dir` files (#1671).
+* Bugfix: Do not normalize URL fragments (#1655).
+* Bugfix: Skip external URLs in sitemap.xml (#1742).
+* Add canonical tag to `readthedocs` theme (#1669).
+
+## Version 1.0.4 (2018-09-07)
+
+* Bugfix: Ignore absolute links in Markdown (#1621).
+
+## Version 1.0.3 (2018-08-29)
+
+* Bugfix: Warn on relative paths in navigation (#1604).
+* Bugfix: Handle empty `theme_config.yml` files correctly (#1602).
+
 ## Version 1.0.2 (2018-08-22)
 
 * Bugfix: Provide absolute `base_url` to error templates (#1598).
@@ -877,7 +928,7 @@ documentation.
 
 [extra config]: ../user-guide/configuration.md#extra
 [Markdown extension configuration options]: ../user-guide/configuration.md#markdown_extensions
-[wheels]: http://pythonwheels.com/
+[wheels]: https://pythonwheels.com/
 
 ## Version 0.12.2 (2015-04-22)
 
