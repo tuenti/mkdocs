@@ -13,7 +13,6 @@ from markdown.treeprocessors import Treeprocessor
 from markdown.util import AMP_SUBSTITUTE
 
 from mkdocs.structure.toc import get_toc
-from mkdocs.utils import meta, urlparse, urlunparse, urljoin, get_markdown_title, is_markdown_file, is_image_file
 from mkdocs.utils import meta, urlparse, urlunparse, urljoin, urlunquote, get_markdown_title, is_markdown_file, is_image_file, warning_filter
 
 log = logging.getLogger(__name__)
@@ -180,7 +179,7 @@ class Page(object):
         if config['source_code_link']:
             extensions.append(SourceCodeLinkExtension(self.file, config['source_code_link']))
 
-        extensions.append(_RelativePathExtension(self.file, files)
+        extensions.append(_RelativePathExtension(self.file, files))
         extensions.extend(config['markdown_extensions'])
 
         md = markdown.Markdown(
