@@ -84,7 +84,7 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
             return
 
         try:
-            self.es_client = elasticsearch.Elasticsearch(self.config['es_host'])
+            self.es_client = elasticsearch.Elasticsearch(self.config['es_host'], timeout=120)
             log.info(
                 'Connecting to elasticsearch at %s [%s]',
                 self.config['es_host'],
@@ -101,26 +101,26 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
             )
 
             log.info('Creating new index %s', self.build_index)
-            self.es_client.indices.create(index=self.build_index, timeout=60)
+            self.es_client.indices.create(index=self.build_index)
 
             if not self.es_client.indices.exists_alias(self.config['es_index']):
                 log.info("Elastic index alias %s doesn't exist, creating...", self.config['es_index'])
-                self.es_client.indices.put_alias(self.build_index, self.config['es_index'], timeout=60)
+                self.es_client.indices.put_alias(self.build_index, self.config['es_index'])
 
             log.info('Indexing parent documents')
             log.debug(list(self._get_es_parents()))
-            elasticsearch.helpers.bulk(self.es_client, self._get_es_parents(), timeout=60)
+            elasticsearch.helpers.bulk(self.es_client, self._get_es_parents())
             log.info('Indexing children documents')
             log.debug(list(self._get_es_children()))
-            elasticsearch.helpers.bulk(self.es_client, self._get_es_children(), timeout=60)
+            elasticsearch.helpers.bulk(self.es_client, self._get_es_children())
 
             body = {"actions": [{"remove": {"index": "{}-*".format(self.config['es_index']), "alias": self.config['es_index']}},
                             {"add": {"index": self.build_index, "alias": self.config['es_index']}}]}
-            self.es_client.indices.update_aliases(body, timeout=60)
+            self.es_client.indices.update_aliases(body)
             mkdocs_indexes = self.es_client.indices.get("{}-*".format(self.config['es_index']))
             old_indices = [index for index in mkdocs_indexes if index != self.build_index]
             if len(old_indices) > 0:
-                self.es_client.indices.delete(old_indices, timeout=60)
+                self.es_client.indices.delete(old_indices)
         except Exception as e:
             log.exception('Failed elastic build')
 
