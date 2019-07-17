@@ -77,28 +77,6 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
             return
 
         super(ElasticsearchPlugin, self).on_pre_build(config, **kwargs)
-        self.es_client = elasticsearch.Elasticsearch(self.config['es_host'])
-        log.info(
-            'Connecting to elasticsearch at %s [%s]',
-            self.config['es_host'],
-            self.config['es_index'],
-        )
-        if not self.es_client.indices.exists_template(self.config['es_index']):
-            log.info("Elastic index template %s doesn't exist, creating...", self.config['es_index'])
-            INDEX_MAPPING['index_patterns'].append('%s-*' % self.config['es_index'])
-            self.es_client.indices.put_template(self.config['es_index'], INDEX_MAPPING)
-
-        self.build_index = '%s-%s' % (
-            self.config['es_index'],
-            datetime.now().strftime('%Y%m%d%H%M%S')
-        )
-
-        log.info('Creating new index %s', self.build_index)
-        self.es_client.indices.create(index=self.build_index)
-
-        if not self.es_client.indices.exists_alias(self.config['es_index']):
-            log.info("Elastic index alias %s doesn't exist, creating...", self.config['es_index'])
-            self.es_client.indices.put_alias(self.build_index, self.config['es_index'])
 
     def on_post_build(self, config, **kwargs):
         if 'dirty' in kwargs and kwargs['dirty']:
@@ -106,20 +84,43 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
             return
 
         try:
+            self.es_client = elasticsearch.Elasticsearch(self.config['es_host'])
+            log.info(
+                'Connecting to elasticsearch at %s [%s]',
+                self.config['es_host'],
+                self.config['es_index'],
+            )
+            if not self.es_client.indices.exists_template(self.config['es_index']):
+                log.info("Elastic index template %s doesn't exist, creating...", self.config['es_index'])
+                INDEX_MAPPING['index_patterns'].append('%s-*' % self.config['es_index'])
+                self.es_client.indices.put_template(self.config['es_index'], INDEX_MAPPING)
+
+            self.build_index = '%s-%s' % (
+                self.config['es_index'],
+                datetime.now().strftime('%Y%m%d%H%M%S')
+            )
+
+            log.info('Creating new index %s', self.build_index)
+            self.es_client.indices.create(index=self.build_index, timeout=60)
+
+            if not self.es_client.indices.exists_alias(self.config['es_index']):
+                log.info("Elastic index alias %s doesn't exist, creating...", self.config['es_index'])
+                self.es_client.indices.put_alias(self.build_index, self.config['es_index'], timeout=60)
+
             log.info('Indexing parent documents')
             log.debug(list(self._get_es_parents()))
-            elasticsearch.helpers.bulk(self.es_client, self._get_es_parents())
+            elasticsearch.helpers.bulk(self.es_client, self._get_es_parents(), timeout=60)
             log.info('Indexing children documents')
             log.debug(list(self._get_es_children()))
-            elasticsearch.helpers.bulk(self.es_client, self._get_es_children())
+            elasticsearch.helpers.bulk(self.es_client, self._get_es_children(), timeout=60)
 
             body = {"actions": [{"remove": {"index": "{}-*".format(self.config['es_index']), "alias": self.config['es_index']}},
                             {"add": {"index": self.build_index, "alias": self.config['es_index']}}]}
-            self.es_client.indices.update_aliases(body)
+            self.es_client.indices.update_aliases(body, timeout=60)
             mkdocs_indexes = self.es_client.indices.get("{}-*".format(self.config['es_index']))
             old_indices = [index for index in mkdocs_indexes if index != self.build_index]
             if len(old_indices) > 0:
-                self.es_client.indices.delete(old_indices)
+                self.es_client.indices.delete(old_indices, timeout=60)
         except Exception as e:
             log.exception('Failed elastic build')
 
