@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import json
 import hashlib
 import logging
 from datetime import datetime
@@ -69,7 +68,7 @@ INDEX_MAPPING = {
 class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
     config_scheme = (
         ('es_host', mkdocs.config.config_options.URL(required=True)),
-        ('es_index', mkdocs.config.config_options.Type(mkdocs.utils.string_types, default='mkdocs')),
+        ('es_index', mkdocs.config.config_options.Type(str, default='mkdocs')),
     )
 
     def on_pre_build(self, config, **kwargs):
@@ -121,7 +120,7 @@ class ElasticsearchPlugin(mkdocs.contrib.search.SearchPlugin):
             old_indices = [index for index in mkdocs_indexes if index != self.build_index]
             if len(old_indices) > 0:
                 self.es_client.indices.delete(old_indices)
-        except Exception as e:
+        except:
             log.exception('Failed elastic build')
 
     def _base_es_document(self, doc):
