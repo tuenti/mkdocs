@@ -1,11 +1,8 @@
-# coding: utf-8
-
 """
 Implements the plugin API for MkDocs.
 
 """
 
-from __future__ import unicode_literals
 
 import pkg_resources
 import logging
@@ -29,10 +26,10 @@ def get_plugins():
 
     plugins = pkg_resources.iter_entry_points(group='mkdocs.plugins')
 
-    return dict((plugin.name, plugin) for plugin in plugins)
+    return {plugin.name: plugin for plugin in plugins}
 
 
-class BasePlugin(object):
+class BasePlugin:
     """
     Plugin base class.
 
@@ -61,7 +58,7 @@ class PluginCollection(OrderedDict):
     """
 
     def __init__(self, *args, **kwargs):
-        super(PluginCollection, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.events = {x: [] for x in EVENTS}
 
     def _register_event(self, event_name, method):
@@ -71,10 +68,10 @@ class PluginCollection(OrderedDict):
     def __setitem__(self, key, value, **kwargs):
         if not isinstance(value, BasePlugin):
             raise TypeError(
-                '{0}.{1} only accepts values which are instances of {3}.{4} '
+                '{0}.{1} only accepts values which are instances of {2}.{3} '
                 'sublcasses'.format(self.__module__, self.__name__,
                                     BasePlugin.__module__, BasePlugin.__name__))
-        super(PluginCollection, self).__setitem__(key, value, **kwargs)
+        super().__setitem__(key, value, **kwargs)
         # Register all of the event methods defined for this Plugin.
         for event_name in (x for x in dir(value) if x.startswith('on_')):
             method = getattr(value, event_name)

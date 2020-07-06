@@ -1,7 +1,6 @@
 import unittest
 import os
-import io
-import mock
+from unittest import mock
 
 from mkdocs.structure.files import Files, File, get_files, _sort_files, _filter_paths
 from mkdocs.tests.base import load_config, tempdir, PathAssertionMixin
@@ -123,10 +122,38 @@ class TestFiles(PathAssertionMixin, unittest.TestCase):
         self.assertFalse(f.is_javascript())
         self.assertFalse(f.is_css())
 
+    def test_md_readme_index_file(self):
+        f = File('README.md', '/path/to/docs', '/path/to/site', use_directory_urls=False)
+        self.assertPathsEqual(f.src_path, 'README.md')
+        self.assertPathsEqual(f.abs_src_path, '/path/to/docs/README.md')
+        self.assertPathsEqual(f.dest_path, 'index.html')
+        self.assertPathsEqual(f.abs_dest_path, '/path/to/site/index.html')
+        self.assertEqual(f.url, 'index.html')
+        self.assertEqual(f.name, 'index')
+        self.assertTrue(f.is_documentation_page())
+        self.assertFalse(f.is_static_page())
+        self.assertFalse(f.is_media_file())
+        self.assertFalse(f.is_javascript())
+        self.assertFalse(f.is_css())
+
     def test_md_index_file_use_directory_urls(self):
         f = File('index.md', '/path/to/docs', '/path/to/site', use_directory_urls=True)
         self.assertPathsEqual(f.src_path, 'index.md')
         self.assertPathsEqual(f.abs_src_path, '/path/to/docs/index.md')
+        self.assertPathsEqual(f.dest_path, 'index.html')
+        self.assertPathsEqual(f.abs_dest_path, '/path/to/site/index.html')
+        self.assertEqual(f.url, '.')
+        self.assertEqual(f.name, 'index')
+        self.assertTrue(f.is_documentation_page())
+        self.assertFalse(f.is_static_page())
+        self.assertFalse(f.is_media_file())
+        self.assertFalse(f.is_javascript())
+        self.assertFalse(f.is_css())
+
+    def test_md_readme_index_file_use_directory_urls(self):
+        f = File('README.md', '/path/to/docs', '/path/to/site', use_directory_urls=True)
+        self.assertPathsEqual(f.src_path, 'README.md')
+        self.assertPathsEqual(f.abs_src_path, '/path/to/docs/README.md')
         self.assertPathsEqual(f.dest_path, 'index.html')
         self.assertPathsEqual(f.abs_dest_path, '/path/to/site/index.html')
         self.assertEqual(f.url, '.')
@@ -324,7 +351,11 @@ class TestFiles(PathAssertionMixin, unittest.TestCase):
         'favicon.ico',
         'style.css',
         'foo.md',
-        'README'
+        'README',
+        '.ignore.txt',
+        '.ignore/file.txt',
+        'foo/.ignore.txt',
+        'foo/.ignore/file.txt'
     ])
     def test_add_files_from_theme(self, tdir, ddir):
         config = load_config(docs_dir=ddir, theme={'name': None, 'custom_dir': tdir})
@@ -619,7 +650,7 @@ class TestFiles(PathAssertionMixin, unittest.TestCase):
         dest_path = os.path.join(dest_dir, 'test.txt')
         file.copy_file(dirty=False)
         self.assertPathIsFile(dest_path)
-        with io.open(dest_path, 'r', encoding='utf-8') as f:
+        with open(dest_path, 'r', encoding='utf-8') as f:
             self.assertEqual(f.read(), 'source content')
 
     @tempdir(files={'test.txt': 'destination content'})
@@ -630,7 +661,7 @@ class TestFiles(PathAssertionMixin, unittest.TestCase):
         dest_path = os.path.join(dest_dir, 'test.txt')
         file.copy_file(dirty=True)
         self.assertPathIsFile(dest_path)
-        with io.open(dest_path, 'r', encoding='utf-8') as f:
+        with open(dest_path, 'r', encoding='utf-8') as f:
             self.assertEqual(f.read(), 'source content')
 
     @tempdir(files={'test.txt': 'destination content'})
@@ -641,5 +672,5 @@ class TestFiles(PathAssertionMixin, unittest.TestCase):
         dest_path = os.path.join(dest_dir, 'test.txt')
         file.copy_file(dirty=True)
         self.assertPathIsFile(dest_path)
-        with io.open(dest_path, 'r', encoding='utf-8') as f:
+        with open(dest_path, 'r', encoding='utf-8') as f:
             self.assertEqual(f.read(), 'destination content')

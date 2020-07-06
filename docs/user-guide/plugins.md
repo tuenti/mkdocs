@@ -14,7 +14,8 @@ appropriate package name and install it using `pip`:
     pip install mkdocs-foo-plugin
 
 Once a plugin has been successfully installed, it is ready to use. It just needs
-to be [enabled](#using-plugins) in the configuration file.
+to be [enabled](#using-plugins) in the configuration file. The [MkDocs Plugins]
+wiki page has a growing list of plugins that you can install and use.
 
 ## Using Plugins
 
@@ -76,7 +77,7 @@ All `BasePlugin` subclasses contain the following attributes:
 
         class MyPlugin(mkdocs.plugins.BasePlugin):
             config_scheme = (
-                ('foo', mkdocs.config.config_options.Type(mkdocs.utils.string_types, default='a default value')),
+                ('foo', mkdocs.config.config_options.Type(str, default='a default value')),
                 ('bar', mkdocs.config.config_options.Type(int, default=0)),
                 ('baz', mkdocs.config.config_options.Type(bool, default=True))
             )
@@ -154,6 +155,7 @@ entire site.
     Parameters:
     : __server:__ `livereload.Server` instance
     : __config:__ global configuration object
+    : __builder:__ a callable which gets passed to each call to `server.watch`
 
     Returns:
     : `livereload.Server` instance
@@ -412,3 +414,4 @@ tell MkDocs to use if via the config.
 [post_template]: #on_post_template
 [static_templates]: configuration.md#static_templates
 [Template Events]: #template-events
+[MkDocs Plugins]: https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins

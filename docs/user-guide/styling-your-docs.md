@@ -25,8 +25,7 @@ the [Customizing a Theme][customize] section below.
 ### mkdocs
 
 The default theme, which was built as a custom [Bootstrap] theme, supports most
-every feature of MkDocs. It only officially supports two levels in the
-navigation (see #1107).
+every feature of MkDocs.
 
 ![mkdocs](../img/mkdocs.png)
 
@@ -72,6 +71,17 @@ supports the following options:
     * __`previous`__: Navigate to the "previous" page. Default: `80` (p)
 
     * __`search`__: Display the search modal. Default: `83` (s)
+
+* __`navigation_depth`__: The maximum depth of the navigation tree in the
+  sidebar. Default: `2`.
+
+* __`nav_style`__: This adjusts the visual style for the top navigation bar; by
+  default, this is set to `primary` (the default), but it can also be set to
+  `dark` or `light`.
+
+        theme:
+            name: mkdocs
+            nav_style: dark
 
 [styles]: https://highlightjs.org/static/demo/
 
@@ -289,7 +299,7 @@ following blocks:
 * `extrahead`: An empty block in the `<head>` to insert custom tags/scripts/etc.
 * `site_name`: Contains the site name in the navigation bar.
 * `site_nav`: Contains the site navigation in the navigation bar.
-* `search_box`: Contains the search box in the navigation bar.
+* `search_button`: Contains the search box in the navigation bar.
 * `next_prev`: Contains the next and previous buttons in the navigation bar.
 * `repo`: Contains the repository link in the navigation bar.
 * `content`: Contains the page content and table of contents for the page.

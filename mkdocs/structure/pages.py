@@ -1,11 +1,7 @@
-# coding: utf-8
-
-from __future__ import unicode_literals
-
 import os
-import io
-import datetime
 import logging
+from urllib.parse import urlparse, urlunparse, urljoin
+from urllib.parse import unquote as urlunquote
 
 import markdown
 from markdown.extensions import Extension
@@ -13,13 +9,13 @@ from markdown.treeprocessors import Treeprocessor
 from markdown.util import AMP_SUBSTITUTE
 
 from mkdocs.structure.toc import get_toc
-from mkdocs.utils import meta, urlparse, urlunparse, urljoin, urlunquote, get_markdown_title, is_markdown_file, is_image_file, warning_filter
+from mkdocs.utils import meta, get_build_date, get_markdown_title, is_markdown_file, is_image_file, warning_filter
 
 log = logging.getLogger(__name__)
 log.addFilter(warning_filter)
 
 
-class Page(object):
+class Page:
     def __init__(self, title, file, config):
         file.page = self
         self.file = file
@@ -36,14 +32,7 @@ class Page(object):
         self.is_page = True
         self.is_link = False
 
-        # Support SOURCE_DATE_EPOCH environment variable for "reproducible" builds.
-        # See https://reproducible-builds.org/specs/source-date-epoch/
-        if 'SOURCE_DATE_EPOCH' in os.environ:
-            self.update_date = datetime.datetime.utcfromtimestamp(
-                int(os.environ['SOURCE_DATE_EPOCH'])
-            ).strftime("%Y-%m-%d")
-        else:
-            self.update_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.update_date = get_build_date()
 
         self._set_canonical_url(config.get('site_url', None))
         self._set_edit_url(config.get('repo_url', None), config.get('edit_uri', None))
@@ -57,7 +46,7 @@ class Page(object):
     def __eq__(self, other):
 
         def sub_dict(d):
-            return dict((key, value) for key, value in d.items() if key in ['title', 'file'])
+            return {key: value for key, value in d.items() if key in ['title', 'file']}
 
         return (isinstance(other, self.__class__) and sub_dict(self.__dict__) == sub_dict(other.__dict__))
 
@@ -93,7 +82,7 @@ class Page(object):
 
     @property
     def is_homepage(self):
-        return self.is_top_level and self.is_index
+        return self.is_top_level and self.is_index and self.file.url == '.'
 
     @property
     def url(self):
@@ -128,9 +117,9 @@ class Page(object):
         )
         if source is None:
             try:
-                with io.open(self.file.abs_src_path, 'r', encoding='utf-8-sig', errors='strict') as f:
+                with open(self.file.abs_src_path, 'r', encoding='utf-8-sig', errors='strict') as f:
                     source = f.read()
-            except IOError:
+            except OSError:
                 log.error('File not found: {}'.format(self.file.src_path))
                 raise
             except ValueError:
@@ -187,7 +176,7 @@ class Page(object):
             extension_configs=config['mdx_configs'] or {}
         )
         self.content = md.convert(self.markdown)
-        self.toc = get_toc(getattr(md, 'toc', ''))
+        self.toc = get_toc(getattr(md, 'toc_tokens', []))
 
 
 class _RelativePathTreeprocessor(Treeprocessor):
@@ -219,7 +208,8 @@ class _RelativePathTreeprocessor(Treeprocessor):
     def path_to_url(self, url):
         scheme, netloc, path, params, query, fragment = urlparse(url)
 
-        if scheme or netloc or not path or AMP_SUBSTITUTE in url or '.' not in os.path.split(path)[-1]:
+        if (scheme or netloc or not path or url.startswith('\\')
+                or AMP_SUBSTITUTE in url or '.' not in os.path.split(path)[-1]):
             # Ignore URLs unless they are a relative link to a source file.
             # AMP_SUBSTITUTE is used internally by Markdown only for email.
             # No '.' in the last part of a path indicates path does not point to a file.
@@ -252,9 +242,9 @@ class _RelativePathExtension(Extension):
         self.file = file
         self.files = files
 
-    def extendMarkdown(self, md, md_globals):
+    def extendMarkdown(self, md):
         relpath = _RelativePathTreeprocessor(self.file, self.files)
-        md.treeprocessors.add("relpath", relpath, "_end")
+        md.treeprocessors.register(relpath, "relpath", 0)
 
 
 class SourceCodeLinkTreeprocessor(Treeprocessor):

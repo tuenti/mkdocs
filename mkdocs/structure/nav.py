@@ -1,16 +1,14 @@
-# coding: utf-8
-
-from __future__ import unicode_literals
 import logging
+from urllib.parse import urlparse
 
 from mkdocs.structure.pages import Page
-from mkdocs.utils import string_types, nest_paths, urlparse, warning_filter
+from mkdocs.utils import nest_paths, warning_filter
 
 log = logging.getLogger(__name__)
 log.addFilter(warning_filter)
 
 
-class Navigation(object):
+class Navigation:
     def __init__(self, items, pages):
         self.items = items  # Nested List with full navigation of Sections, Pages, and Links.
         self.pages = pages  # Flat List of subset of Pages in nav, in order.
@@ -31,7 +29,7 @@ class Navigation(object):
         return len(self.items)
 
 
-class Section(object):
+class Section:
     def __init__(self, title, children):
         self.title = title
         self.children = children
@@ -44,7 +42,7 @@ class Section(object):
         self.is_link = False
 
     def __repr__(self):
-        return "Section(title='{0}')".format(self.title)
+        return "Section(title='{}')".format(self.title)
 
     def _get_active(self):
         """ Return active status of section. """
@@ -71,7 +69,7 @@ class Section(object):
         return '\n'.join(ret)
 
 
-class Link(object):
+class Link:
     def __init__(self, title, url):
         self.title = title
         self.url = url
@@ -119,8 +117,9 @@ def get_navigation(files, config):
             'included in the "nav" configuration:\n  - {}'.format(
                 '\n  - '.join([file.src_path for file in missing_from_config]))
         )
-        # Any documentation files not found in the nav should still have an associated page.
-        # However, these page objects are only accessable from File instances as `file.page`.
+        # Any documentation files not found in the nav should still have an associated page, so we
+        # create them here. The Page object will automatically be assigned to `file.page` during
+        # its creation (and this is the only way in which these page objects are accessable).
         for file in missing_from_config:
             Page(None, file, config)
 
@@ -150,7 +149,7 @@ def _data_to_navigation(data, files, config):
     if isinstance(data, dict):
         return [
             _data_to_navigation((key, value), files, config)
-            if isinstance(value, string_types) else
+            if isinstance(value, str) else
             Section(title=key, children=_data_to_navigation(value, files, config))
             for key, value in data.items()
         ]

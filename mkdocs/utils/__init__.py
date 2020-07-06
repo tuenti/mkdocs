@@ -1,5 +1,3 @@
-# coding: utf-8
-
 """
 Standalone file utils.
 
@@ -7,46 +5,19 @@ Nothing in this module should have an knowledge of config or the layout
 and structure of the site and pages in the site.
 """
 
-from __future__ import unicode_literals
 
 import logging
 import os
 import pkg_resources
 import shutil
 import re
-import sys
 import yaml
 import fnmatch
 import posixpath
+from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from mkdocs import exceptions
-
-try:                                                        # pragma: no cover
-    from urllib.parse import urlparse, urlunparse, urljoin  # noqa
-    from urllib.parse import quote as urlquote              # noqa
-    from urllib.parse import unquote as urlunquote          # noqa
-    from collections import UserDict                        # noqa
-except ImportError:                                         # pragma: no cover
-    from urlparse import urlparse, urlunparse, urljoin      # noqa
-    from urllib import quote                                # noqa
-    from urllib import unquote                              # noqa
-    from UserDict import UserDict                           # noqa
-
-
-PY3 = sys.version_info[0] == 3
-
-if PY3:                         # pragma: no cover
-    string_types = str,         # noqa
-    text_type = str             # noqa
-else:                           # pragma: no cover
-    string_types = basestring,  # noqa
-    text_type = unicode         # noqa
-
-    def urlunquote(path):  # noqa
-        return unquote(path.encode('utf8', errors='backslashreplace')).decode('utf8', errors='replace')
-
-    def urlquote(path):  # noqa
-        return quote(path.encode('utf8', errors='backslashreplace')).decode('utf8', errors='replace')
 
 log = logging.getLogger(__name__)
 
@@ -107,6 +78,44 @@ def modified_time(file_path):
         return os.path.getmtime(file_path)
     else:
         return 0.0
+
+
+def get_build_timestamp():
+    """
+    Returns the number of seconds since the epoch.
+
+    Support SOURCE_DATE_EPOCH environment variable for reproducible builds.
+    See https://reproducible-builds.org/specs/source-date-epoch/
+    """
+    source_date_epoch = os.environ.get('SOURCE_DATE_EPOCH')
+    if source_date_epoch is None:
+        return int(datetime.now(timezone.utc).timestamp())
+
+    return int(source_date_epoch)
+
+
+def get_build_datetime():
+    """
+    Returns an aware datetime object.
+
+    Support SOURCE_DATE_EPOCH environment variable for reproducible builds.
+    See https://reproducible-builds.org/specs/source-date-epoch/
+    """
+    source_date_epoch = os.environ.get('SOURCE_DATE_EPOCH')
+    if source_date_epoch is None:
+        return datetime.now(timezone.utc)
+
+    return datetime.fromtimestamp(int(source_date_epoch), timezone.utc)
+
+
+def get_build_date():
+    """
+    Returns the displayable date string.
+
+    Support SOURCE_DATE_EPOCH environment variable for reproducible builds.
+    See https://reproducible-builds.org/specs/source-date-epoch/
+    """
+    return get_build_datetime().strftime('%Y-%m-%d')
 
 
 def reduce_list(data_set):
@@ -200,7 +209,7 @@ def is_markdown_file(path):
 
     https://superuser.com/questions/249436/file-extension-for-markdown-files
     """
-    return any(fnmatch.fnmatch(path.lower(), '*{0}'.format(x)) for x in markdown_extensions)
+    return any(fnmatch.fnmatch(path.lower(), '*{}'.format(x)) for x in markdown_extensions)
 
 
 def is_html_file(path):
@@ -312,7 +321,7 @@ def get_themes():
 
         if theme.name in builtins and theme.dist.key != 'mkdocs':
             raise exceptions.ConfigurationError(
-                "The theme {0} is a builtin theme but {1} provides a theme "
+                "The theme {} is a builtin theme but {} provides a theme "
                 "with the same name".format(theme.name, theme.dist.key))
 
         elif theme.name in themes:

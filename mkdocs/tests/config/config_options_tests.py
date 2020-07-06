@@ -1,14 +1,9 @@
-# coding=UTF-8
-
-from __future__ import unicode_literals
-
 import os
 import sys
 import unittest
-from mock import patch
+from unittest.mock import patch
 
 import mkdocs
-from mkdocs import utils
 from mkdocs.config import config_options
 from mkdocs.config.base import Config
 
@@ -54,7 +49,7 @@ class TypeTest(unittest.TestCase):
 
     def test_single_type(self):
 
-        option = config_options.Type(utils.string_types)
+        option = config_options.Type(str)
         value = option.validate("Testing")
         self.assertEqual(value, "Testing")
 
@@ -71,7 +66,7 @@ class TypeTest(unittest.TestCase):
                           option.validate, {'a': 1})
 
     def test_length(self):
-        option = config_options.Type(utils.string_types, length=7)
+        option = config_options.Type(str, length=7)
 
         value = option.validate("Testing")
         self.assertEqual(value, "Testing")
@@ -105,17 +100,17 @@ class IpAddressTest(unittest.TestCase):
 
         option = config_options.IpAddress()
         value = option.validate(addr)
-        self.assertEqual(utils.text_type(value), addr)
+        self.assertEqual(str(value), addr)
         self.assertEqual(value.host, '127.0.0.1')
         self.assertEqual(value.port, 8000)
 
     def test_valid_IPv6_address(self):
-        addr = '[::1]:8000'
+        addr = '::1:8000'
 
         option = config_options.IpAddress()
         value = option.validate(addr)
-        self.assertEqual(utils.text_type(value), addr)
-        self.assertEqual(value.host, '[::1]')
+        self.assertEqual(str(value), addr)
+        self.assertEqual(value.host, '::1')
         self.assertEqual(value.port, 8000)
 
     def test_named_address(self):
@@ -123,7 +118,7 @@ class IpAddressTest(unittest.TestCase):
 
         option = config_options.IpAddress()
         value = option.validate(addr)
-        self.assertEqual(utils.text_type(value), addr)
+        self.assertEqual(str(value), addr)
         self.assertEqual(value.host, 'localhost')
         self.assertEqual(value.port, 8000)
 
@@ -132,9 +127,24 @@ class IpAddressTest(unittest.TestCase):
 
         option = config_options.IpAddress(default=addr)
         value = option.validate(None)
-        self.assertEqual(utils.text_type(value), addr)
+        self.assertEqual(str(value), addr)
         self.assertEqual(value.host, '127.0.0.1')
         self.assertEqual(value.port, 8000)
+
+    def test_IP_normalization(self):
+        addr = '127.000.000.001:8000'
+        option = config_options.IpAddress(default=addr)
+        value = option.validate(None)
+        self.assertEqual(str(value), '127.0.0.1:8000')
+        self.assertEqual(value.host, '127.0.0.1')
+        self.assertEqual(value.port, 8000)
+
+    def test_invalid_address_range(self):
+        option = config_options.IpAddress()
+        self.assertRaises(
+            config_options.ValidationError,
+            option.validate, '277.0.0.1:8000'
+        )
 
     def test_invalid_address_format(self):
         option = config_options.IpAddress()
@@ -162,6 +172,26 @@ class IpAddressTest(unittest.TestCase):
         self.assertRaises(
             config_options.ValidationError,
             option.validate, '127.0.0.1'
+        )
+
+    def test_unsupported_address(self):
+        option = config_options.IpAddress()
+        value = option.validate('0.0.0.0:8000')
+        option.post_validation({'dev_addr': value}, 'dev_addr')
+        self.assertEqual(len(option.warnings), 1)
+
+    def test_unsupported_IPv6_address(self):
+        option = config_options.IpAddress()
+        value = option.validate(':::8000')
+        option.post_validation({'dev_addr': value}, 'dev_addr')
+        self.assertEqual(len(option.warnings), 1)
+
+    def test_invalid_IPv6_address(self):
+        # The server will error out with this so we treat it as invalid.
+        option = config_options.IpAddress()
+        self.assertRaises(
+            config_options.ValidationError,
+            option.validate, '[::1]:8000'
         )
 
 
@@ -310,7 +340,7 @@ class DirTest(unittest.TestCase):
 
         self.assertEqual(len(fails), 0)
         self.assertEqual(len(warns), 0)
-        self.assertIsInstance(cfg['dir'], utils.text_type)
+        self.assertIsInstance(cfg['dir'], str)
 
     def test_dir_filesystemencoding(self):
         cfg = Config(
@@ -326,16 +356,9 @@ class DirTest(unittest.TestCase):
 
         fails, warns = cfg.validate()
 
-        if utils.PY3:
-            # In PY3 string_types does not include byte strings so validation fails
-            self.assertEqual(len(fails), 1)
-            self.assertEqual(len(warns), 0)
-        else:
-            # In PY2 string_types includes byte strings so validation passes
-            # This test confirms that the byte string is properly decoded
-            self.assertEqual(len(fails), 0)
-            self.assertEqual(len(warns), 0)
-            self.assertIsInstance(cfg['dir'], utils.text_type)
+        # str does not include byte strings so validation fails
+        self.assertEqual(len(fails), 1)
+        self.assertEqual(len(warns), 0)
 
     def test_dir_bad_encoding_fails(self):
         cfg = Config(
@@ -351,12 +374,7 @@ class DirTest(unittest.TestCase):
 
         fails, warns = cfg.validate()
 
-        if sys.platform.startswith('win') and not utils.PY3:
-            # PY2 on Windows seems to be able to decode anything we give it.
-            # But that just means less possable errors for those users so we allow it.
-            self.assertEqual(len(fails), 0)
-        else:
-            self.assertEqual(len(fails), 1)
+        self.assertEqual(len(fails), 1)
         self.assertEqual(len(warns), 0)
 
     def test_config_dir_prepended(self):
@@ -376,7 +394,7 @@ class DirTest(unittest.TestCase):
 
         self.assertEqual(len(fails), 0)
         self.assertEqual(len(warns), 0)
-        self.assertIsInstance(cfg['dir'], utils.text_type)
+        self.assertIsInstance(cfg['dir'], str)
         self.assertEqual(cfg['dir'], os.path.join(base_path, 'foo'))
 
     def test_dir_is_config_dir_fails(self):

@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import logging
 import subprocess
 import os
@@ -14,8 +13,15 @@ default_message = """Deployed {sha} with MkDocs version: {version}"""
 
 
 def _is_cwd_git_repo():
-    proc = subprocess.Popen(['git', 'rev-parse', '--is-inside-work-tree'],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        proc = subprocess.Popen(
+            ['git', 'rev-parse', '--is-inside-work-tree'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+    except FileNotFoundError:
+        log.error("Could not find git - is it installed and on your path?")
+        raise SystemExit(1)
     proc.communicate()
     return proc.wait() == 0
 
@@ -58,11 +64,11 @@ def _check_version(branch):
 
     stdout, _ = proc.communicate()
     msg = stdout.decode('utf-8').strip()
-    m = re.search(r'\d+(\.\d+)+', msg, re.X | re.I)
+    m = re.search(r'\d+(\.\d+)+((a|b|rc)\d+)?(\.post\d+)?(\.dev\d+)?', msg, re.X | re.I)
     previousv = parse_version(m.group()) if m else None
     currentv = parse_version(mkdocs.__version__)
     if not previousv:
-        log.warn('Version check skipped: No version specificed in previous deployment.')
+        log.warning('Version check skipped: No version specified in previous deployment.')
     elif currentv > previousv:
         log.info(
             'Previous deployment was done with MkDocs version {}; '
@@ -124,5 +130,5 @@ def gh_deploy(config, message=None, force=False, ignore_version=False):
             username, repo = path.split('/', 1)
             if repo.endswith('.git'):
                 repo = repo[:-len('.git')]
-            url = 'https://%s.github.io/%s/' % (username, repo)
+            url = 'https://{}.github.io/{}/'.format(username, repo)
             log.info('Your documentation should shortly be available at: ' + url)

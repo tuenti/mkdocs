@@ -20,10 +20,18 @@ docs/
     index.md
 ```
 
-By convention your project homepage should always be named `index`. Any of the
-following extensions may be used for your Markdown source files: `markdown`,
-`mdown`, `mkdn`, `mkd`, `md`. All Markdown files included in your documentation
+By convention your project homepage should be named `index.md` (see [Index
+pages](#index_pages) below for details). Any of the following file
+extensions may be used for your Markdown source files: `markdown`, `mdown`,
+`mkdn`, `mkd`, `md`. All Markdown files included in your documentation
 directory will be rendered in the built site regardless of any settings.
+
+!!! note
+
+    Files and directories with names which begin with a dot (for example:
+    `.foo.md` or `.bar/baz.md`) are ignored by MkDocs, which matches the
+    behavior of most web servers. There is no option to override this
+    behavior.
 
 You can also create multi-page documentation, by creating several Markdown
 files:
@@ -66,6 +74,11 @@ nested URLs, like so:
 /license/
 ```
 
+Any files which are not identified as Markdown files (by their file extension)
+within the [documentation directory](configuration.md#docs_dir) are copied by
+MkDocs to the built site unaltered. See [how to link to images and media]
+(#linking_to_images_and_media) below for details.
+
 ### Index pages
 
 When a directory is requested, by default, most web servers will return an index
@@ -97,12 +110,12 @@ navigation configuration will always be sorted alphanumerically by file name
 will need to manually define your navigation configuration if you would like
 your navigation menu sorted differently.
 
-A simple navigation configuration looks like this:
+A minimal navigation configuration could look like this:
 
 ```no-highlight
 nav:
-- 'index.md'
-- 'about.md'
+    - 'index.md'
+    - 'about.md'
 ```
 
 All paths in the navigation configuration must be relative to the `docs_dir`
@@ -111,14 +124,14 @@ source files for the above configuration would be located at `docs/index.md` and
 `docs/about.md`.
 
 The above example will result in two navigation items being created at the top
-level and with their titles inferred from the contents of the file (or the
-filename if no title is defined within the file). To define a custom title for
-the pages, the title can be added before the filename.
+level and with their titles inferred from the contents of the Markdown file or,
+if no title is defined within the file, of the file name. To override the title
+in the `nav` setting add a title right before the filename.
 
 ```no-highlight
 nav:
-- Home: 'index.md'
-- About: 'about.md'
+    - Home: 'index.md'
+    - About: 'about.md'
 ```
 
 Note that if a title is defined for a page in the navigation, that title will be
@@ -130,13 +143,13 @@ section title. For example:
 
 ```no-highlight
 nav:
-- Home: 'index.md'
-- User Guide:
-    - 'Writing your docs': 'writing-your-docs.md'
-    - 'Styling your docs': 'styling-your-docs.md'
-- About:
-    - 'License': 'license.md'
-    - 'Release Notes': 'release-notes.md'
+    - Home: 'index.md'
+    - 'User Guide':
+        - 'Writing your docs': 'writing-your-docs.md'
+        - 'Styling your docs': 'styling-your-docs.md'
+    - About:
+        - 'License': 'license.md'
+        - 'Release Notes': 'release-notes.md'
 ```
 
 With the above configuration we have three top level items: "Home", "User Guide"
@@ -365,10 +378,13 @@ specific page. The following keys are supported:
     1. A title defined in the [nav] configuration setting for a document.
     2. A title defined in the `title` meta-data key of a document.
     3. A level 1 Markdown header on the first line of the document body.
+       Please note that [Setext-style] headers are not supported.
     4. The filename of a document.
 
     Upon finding a title for a page, MkDoc does not continue checking any
     additional sources in the above list.
+
+[Setext-style]: https://daringfireball.net/projects/markdown/syntax#header
 
 #### YAML Style Meta-Data
 
@@ -494,7 +510,7 @@ blocks without indentation.
 The first line should contain 3 or more backtick (`` ` ``) characters, and the
 last line should contain the same number of backtick characters (`` ` ``):
 
-~~~no-highlight
+````no-highlight
 ```
 Fenced code blocks are like Standard
 Markdown’s regular code blocks, except that
@@ -502,17 +518,17 @@ they’re not indented and instead rely on
 start and end fence lines to delimit the
 code block.
 ```
-~~~
+````
 
 With this approach, the language can optionally be specified on the first line
 after the backticks which informs any syntax highlighters of the language used:
 
-~~~no-highlight
+````no-highlight
 ```python
 def fn():
     pass
 ```
-~~~
+````
 
 Note that fenced code blocks can not be indented. Therefore, they cannot be
 nested inside list items, blockquotes, etc.

@@ -60,7 +60,7 @@ theme:
 
 !!! Warning
 
-    A theme's [configuration] defined in a `mkdocs_theme.yml` file is not loaded 
+    A theme's [configuration] defined in a `mkdocs_theme.yml` file is not loaded
     from `theme.custom_dir`. When an entire theme exists in `theme.custom_dir`
     and `theme.name` is set to `null`, then the entire theme configuration must
     be defined in the [theme] configuration option in the `mkdocs.yml` file.
@@ -116,6 +116,47 @@ with one of the [built-in themes] and modify it accordingly.
 [template inheritance]: http://jinja.pocoo.org/docs/dev/templates/#template-inheritance
 [theme_dir]: ./styling-your-docs.md#using-the-theme_dir
 [blocks]: ./styling-your-docs.md#overriding-template-blocks
+
+## Theme Files
+
+There are various files which a theme treats special in some way. Any other
+files are simply copied from the theme directory to the same path in the
+`site_dir` when the site it built. For example image and CSS files have no
+special significance and are copied as-is. Note, however, that if the user
+provides a file with the same path in their `docs_dir`, then the user's file
+will replace the theme file.
+
+### Template Files
+
+Any files with the `.html` extension are considered to be template files and are
+not copied from the theme directory or any subdirectories. Also, any files
+listed in [static_templates] are treated as templates regardless of their file
+extension.
+
+[static_templates]: #static_templates
+
+### Theme Meta Files
+
+The various files required for packaging a theme are also ignored. Specifically,
+the `mkdocs_theme.yml` configuration file and any Python files.
+
+### Dot Files
+
+Theme authors can explicitly force MkDocs to ignore files by starting a file or
+directory name with a dot. Any of the following files would be ignored:
+
+```text
+.ignored.txt
+.ignored/file.txt
+foo/.ignored.txt
+foo/.ignored/file.txt
+```
+
+### Documentation Files
+
+All documentation files are ignored. Specifically, any Markdown files (using any
+of the file extensions supported by MKDocs). Additionally, any README files
+which may exist in the theme directories are ignored.
 
 ## Template Variables
 

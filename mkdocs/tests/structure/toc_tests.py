@@ -1,30 +1,11 @@
 #!/usr/bin/env python
-# coding: utf-8
 
-from __future__ import unicode_literals
 import unittest
 from mkdocs.structure.toc import get_toc
 from mkdocs.tests.base import dedent, get_markdown_toc
 
 
 class TableOfContentsTests(unittest.TestCase):
-
-    def test_html_toc(self):
-        html = dedent("""
-        <div class="toc">
-        <ul>
-        <li><a href="#foo">Heading 1</a></li>
-        <li><a href="#bar">Heading 2</a></li>
-        </ul>
-        </div>
-        """)
-        expected = dedent("""
-        Heading 1 - #foo
-        Heading 2 - #bar
-        """)
-        toc = get_toc(html)
-        self.assertEqual(str(toc).strip(), expected)
-        self.assertEqual(len(toc), 2)
 
     def test_indented_toc(self):
         md = dedent("""
@@ -165,20 +146,6 @@ class TableOfContentsTests(unittest.TestCase):
         self.assertEqual(str(toc).strip(), expected)
         self.assertEqual(len(toc), 1)
 
-    def test_skip_no_href(self):
-        html = dedent("""
-        <div class="toc">
-        <ul>
-        <li><a>Header 1</a></li>
-        <li><a href="#foo">Header 2</a></li>
-        </ul>
-        </div>
-        """)
-        expected = 'Header 2 - #foo'
-        toc = get_toc(html)
-        self.assertEqual(str(toc).strip(), expected)
-        self.assertEqual(len(toc), 1)
-
     def test_level(self):
         md = dedent("""
         # Heading 1
@@ -192,7 +159,6 @@ class TableOfContentsTests(unittest.TestCase):
         def get_level_sequence(items):
             for item in items:
                 yield item.level
-                for c in get_level_sequence(item.children):
-                    yield c
+                yield from get_level_sequence(item.children)
 
-        self.assertEqual(tuple(get_level_sequence(toc)), (0, 1, 2, 2, 1))
+        self.assertEqual(tuple(get_level_sequence(toc)), (1, 2, 3, 3, 2))

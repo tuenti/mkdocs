@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-# coding: utf-8
 
-from __future__ import unicode_literals
 import unittest
-import mock
+from unittest import mock
 import json
 
 from mkdocs.structure.files import File
@@ -60,6 +58,7 @@ class SearchPluginTests(unittest.TestCase):
         expected = {
             'lang': ['en'],
             'separator': r'[\s\-]+',
+            'min_search_length': 3,
             'prebuild_index': False
         }
         plugin = search.SearchPlugin()
@@ -72,6 +71,7 @@ class SearchPluginTests(unittest.TestCase):
         expected = {
             'lang': ['es'],
             'separator': r'[\s\-]+',
+            'min_search_length': 3,
             'prebuild_index': False
         }
         plugin = search.SearchPlugin()
@@ -84,6 +84,7 @@ class SearchPluginTests(unittest.TestCase):
         expected = {
             'lang': ['en'],
             'separator': r'[\s\-\.]+',
+            'min_search_length': 3,
             'prebuild_index': False
         }
         plugin = search.SearchPlugin()
@@ -92,10 +93,24 @@ class SearchPluginTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(warnings, [])
 
+    def test_plugin_config_min_search_length(self):
+        expected = {
+            'lang': ['en'],
+            'separator': r'[\s\-]+',
+            'min_search_length': 2,
+            'prebuild_index': False
+        }
+        plugin = search.SearchPlugin()
+        errors, warnings = plugin.load_config({'min_search_length': 2})
+        self.assertEqual(plugin.config, expected)
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [])
+
     def test_plugin_config_prebuild_index(self):
         expected = {
             'lang': ['en'],
             'separator': r'[\s\-]+',
+            'min_search_length': 3,
             'prebuild_index': True
         }
         plugin = search.SearchPlugin()
@@ -110,7 +125,7 @@ class SearchPluginTests(unittest.TestCase):
         result = plugin.on_config(load_config(theme='mkdocs', extra_javascript=[]))
         self.assertFalse(result['theme']['search_index_only'])
         self.assertFalse(result['theme']['include_search_page'])
-        self.assertEqual(result['theme'].static_templates, set(['404.html', 'sitemap.xml']))
+        self.assertEqual(result['theme'].static_templates, {'404.html', 'sitemap.xml'})
         self.assertEqual(len(result['theme'].dirs), 3)
         self.assertEqual(result['extra_javascript'], ['search/main.js'])
 
@@ -121,7 +136,7 @@ class SearchPluginTests(unittest.TestCase):
         result = plugin.on_config(config)
         self.assertFalse(result['theme']['search_index_only'])
         self.assertTrue(result['theme']['include_search_page'])
-        self.assertEqual(result['theme'].static_templates, set(['404.html', 'sitemap.xml', 'search.html']))
+        self.assertEqual(result['theme'].static_templates, {'404.html', 'sitemap.xml', 'search.html'})
         self.assertEqual(len(result['theme'].dirs), 3)
         self.assertEqual(result['extra_javascript'], ['search/main.js'])
 
@@ -132,7 +147,7 @@ class SearchPluginTests(unittest.TestCase):
         result = plugin.on_config(config)
         self.assertTrue(result['theme']['search_index_only'])
         self.assertFalse(result['theme']['include_search_page'])
-        self.assertEqual(result['theme'].static_templates, set(['404.html', 'sitemap.xml']))
+        self.assertEqual(result['theme'].static_templates, {'404.html', 'sitemap.xml'})
         self.assertEqual(len(result['theme'].dirs), 2)
         self.assertEqual(len(result['extra_javascript']), 0)
 
@@ -189,7 +204,7 @@ class SearchIndexTests(unittest.TestCase):
 
         stripper.feed("<h1>Testing</h1><p>Content</p>")
 
-        self.assertEquals(stripper.data, ["Testing", "Content"])
+        self.assertEqual(stripper.data, ["Testing", "Content"])
 
     def test_content_parser(self):
 
@@ -198,7 +213,7 @@ class SearchIndexTests(unittest.TestCase):
         parser.feed('<h1 id="title">Title</h1>TEST')
         parser.close()
 
-        self.assertEquals(parser.data, [search_index.ContentSection(
+        self.assertEqual(parser.data, [search_index.ContentSection(
             text=["TEST"],
             id_="title",
             title="Title"
@@ -211,7 +226,7 @@ class SearchIndexTests(unittest.TestCase):
         parser.feed("<h1>Title</h1>TEST")
         parser.close()
 
-        self.assertEquals(parser.data, [search_index.ContentSection(
+        self.assertEqual(parser.data, [search_index.ContentSection(
             text=["TEST"],
             id_=None,
             title="Title"
@@ -224,7 +239,7 @@ class SearchIndexTests(unittest.TestCase):
         parser.feed("Content Before H1 <h1>Title</h1>TEST")
         parser.close()
 
-        self.assertEquals(parser.data, [search_index.ContentSection(
+        self.assertEqual(parser.data, [search_index.ContentSection(
             text=["TEST"],
             id_=None,
             title="Title"
@@ -236,7 +251,7 @@ class SearchIndexTests(unittest.TestCase):
 
         parser.feed("No H1 or H2<span>Title</span>TEST")
 
-        self.assertEquals(parser.data, [])
+        self.assertEqual(parser.data, [])
 
     def test_find_toc_by_id(self):
         """
@@ -309,15 +324,15 @@ class SearchIndexTests(unittest.TestCase):
 
             self.assertEqual(index._entries[1]['title'], "Heading 1")
             self.assertEqual(index._entries[1]['text'], "Content 1")
-            self.assertEqual(index._entries[1]['location'], "{0}#heading-1".format(loc))
+            self.assertEqual(index._entries[1]['location'], "{}#heading-1".format(loc))
 
             self.assertEqual(index._entries[2]['title'], "Heading 2")
             self.assertEqual(strip_whitespace(index._entries[2]['text']), "Content2")
-            self.assertEqual(index._entries[2]['location'], "{0}#heading-2".format(loc))
+            self.assertEqual(index._entries[2]['location'], "{}#heading-2".format(loc))
 
             self.assertEqual(index._entries[3]['title'], "Heading 3")
             self.assertEqual(strip_whitespace(index._entries[3]['text']), "Content3")
-            self.assertEqual(index._entries[3]['location'], "{0}#heading-3".format(loc))
+            self.assertEqual(index._entries[3]['location'], "{}#heading-3".format(loc))
 
     @mock.patch('subprocess.Popen', autospec=True)
     def test_prebuild_index(self, mock_popen):
@@ -361,7 +376,7 @@ class SearchIndexTests(unittest.TestCase):
         # See https://stackoverflow.com/a/36501078/866026
         mock_popen.return_value = mock.Mock()
         mock_popen_obj = mock_popen.return_value
-        mock_popen_obj.communicate.side_effect = IOError
+        mock_popen_obj.communicate.side_effect = OSError
         mock_popen_obj.returncode = 1
 
         index = search_index.SearchIndex(prebuild_index=True)
