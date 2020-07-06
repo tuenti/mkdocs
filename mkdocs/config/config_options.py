@@ -653,9 +653,9 @@ class SourceCodeLink(OptionallyRequired):
             return
 
         config_types = set(type(l) for l in value)
-        if not config_types.issubset({utils.text_type, str}):
+        if not config_types.issubset({str}):
             raise ValidationError("Invalid config. {0} {1}".format(
-                config_types, {utils.text_type, str}
+                config_types, {str}
             ))
 
         if 'repos_prefix' not in value:
