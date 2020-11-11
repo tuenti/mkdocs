@@ -633,6 +633,9 @@ class Plugins(OptionallyRequired):
         return plugin
 
 
+RepoInfo = namedtuple("RepoInfo", ["dir", "id", "url"])
+
+
 class SourceCodeLink(OptionallyRequired):
     """
     SourceCodeLink Config Option
@@ -661,11 +664,11 @@ class SourceCodeLink(OptionallyRequired):
         if 'repos_prefix' not in value:
             value['repos_prefix'] = ""
 
-        if 'prefix' not in value:
-            value['prefix'] = ""
+        if 'default_url_template' not in value:
+            value['default_url_template'] = ""
 
-        if 'suffix' not in value:
-            value['suffix'] = ""
+        if 'github_url_template' not in value:
+            value['github_url_template'] = ""
 
         if 'repos_file' not in value:
             raise ValidationError("Undefined repos_file")
@@ -680,10 +683,15 @@ class SourceCodeLink(OptionallyRequired):
             return
 
         try:
-            config[key_name]['repos_info'] = []
-            with open(config[key_name]['repos_file']) as f:
-                for l in f.readlines():
-                    config[key_name]['repos_info'].append(tuple(l.strip().split()))
-
+            config[key_name]['repos_info'] = self.parse_repos_info(config[key_name]['repos_file'])
         except IOError as e:
             raise ValidationError('Unable to read repos_file', e)
+
+    @staticmethod
+    def parse_repos_info(file):
+        repos_info = []
+        with open(file) as f:
+            for l in f.readlines():
+                line = l.strip().split()
+                repos_info.append(RepoInfo(dir=line[0], id=line[1], url=line[2]))
+        return repos_info

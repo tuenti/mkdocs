@@ -75,6 +75,7 @@ setup(
         'mkdocs.plugins': [
             'search = mkdocs.contrib.search:SearchPlugin',
             'elasticsearch = mkdocs.contrib.elasticsearch:ElasticsearchPlugin',
+            'source_url = mkdocs.contrib.source_url:SourceUrlPlugin',
         ],
     },
     classifiers=[
